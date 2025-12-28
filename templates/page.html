@@ -20,7 +20,7 @@
 
 {% block content %}
 <article class="article">
-    {% if mode != "docs" %}
+    {% if mode == "site" or mode == "blog" %}
     <header class="article__header">
         <h1>{{ page.title }}</h1>
 
@@ -28,7 +28,6 @@
         <p class="article__description">{{ page.description }}</p>
         {% endif %}
 
-        {% if mode == "site" or mode == "blog" %}
         <div class="article__meta">
             {% if page.date %}
             <time datetime="{{ page.date }}">{{ page.date | date(format="%B %d, %Y") }}</time>
@@ -46,7 +45,6 @@
             {% endfor %}
             {% endif %}
         </div>
-        {% endif %}
     </header>
     {% endif %}
 

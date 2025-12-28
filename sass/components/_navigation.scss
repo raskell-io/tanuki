@@ -107,16 +107,15 @@
 .toc-toggle {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   color: var(--color-text-secondary);
   background: transparent;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
 
   &:hover {
     color: var(--color-text);
@@ -127,12 +126,6 @@
   svg {
     width: 20px;
     height: 20px;
-  }
-
-  .toc-toggle__label {
-    @media (max-width: 480px) {
-      display: none;
-    }
   }
 
   // For docs mode: only show on mobile (desktop has sidebar)
@@ -418,13 +411,14 @@
   gap: 0.5rem;
 }
 
-// Hide version/theme/github on mobile for docs mode (they're in ToC overlay)
+// Hide version/theme/github on mobile for docs/book mode (they're in ToC overlay)
 .header__actions-desktop {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 
-  .layout--docs & {
+  .layout--docs &,
+  .layout--book & {
     @media (max-width: 1023px) {
       display: none;
     }
