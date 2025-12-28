@@ -12,12 +12,14 @@
 
 {% block content %}
 <article class="section-page">
+    {% if mode == "site" or mode == "blog" %}
     <header class="section-page__header">
         <h1>{{ section.title }}</h1>
         {% if section.description %}
         <p class="section-page__description">{{ section.description }}</p>
         {% endif %}
     </header>
+    {% endif %}
 
     {% if section.content %}
     <div class="section-page__content">
