@@ -1,184 +1,136 @@
 # Tanuki (タヌキ)
 
-A versatile, whimsical Zola theme with Catppuccin colors, Geist typography, and Nintendo-inspired UX. Named after the playful Japanese raccoon dog.
+An opinionated Zola theme for documentation, books, and blogs. Beautiful, accessible, and thoughtfully designed.
 
 ![Tanuki Theme](screenshot.png)
 
+**[Live Demo](https://tanuki.raskell.io)** | **[Documentation](https://tanuki.raskell.io/docs/)**
+
 ## Features
 
-- **Three Modes**: Documentation, E-book, and Site/Blog
-- **Catppuccin Colors**: Mocha (dark) and Latte (light) themes
-- **Geist Typography**: Beautiful, readable fonts
-- **Lucide Icons**: Clean, consistent iconography
-- **Nintendo-inspired UX**: Whimsical animations and obvious interactions
-- **Full-text Search**: Elasticlunr-powered search
-- **Print Support**: Print all pages as a single document
-- **Responsive**: Works beautifully on all devices
-- **Accessible**: WCAG-compliant with keyboard navigation
+- **Three Modes** — Documentation (with versioning), Book, and Blog layouts
+- **Catppuccin Colors** — Soothing Mocha (dark) and Latte (light) palettes
+- **Geist Typography** — Clean, readable variable fonts
+- **Lucide Icons** — Crisp, consistent iconography
+- **Resizable Sidebar** — Drag to resize, persists across sessions
+- **Full-text Search** — Elasticlunr-powered instant search
+- **Dark/Light Toggle** — Three-way toggle with system preference detection
+- **Print Support** — Print all pages as a single document (docs/book modes)
+- **Keyboard Navigation** — Arrow keys for prev/next, `/` for search
+- **SEO & Accessibility** — JSON-LD structured data, ARIA landmarks, semantic HTML
 
 ## Installation
 
-### As a Git Submodule (Recommended)
-
 ```bash
 cd your-zola-site
+git clone https://github.com/raskell-io/tanuki themes/tanuki
+```
+
+Or as a git submodule:
+
+```bash
 git submodule add https://github.com/raskell-io/tanuki themes/tanuki
 ```
 
-### Manual Installation
+## Quick Start
 
-Download and extract the theme to your `themes/tanuki` directory.
-
-## Configuration
-
-Add to your `config.toml`:
+### Documentation Mode
 
 ```toml
+base_url = "https://docs.example.com"
+title = "My Project Docs"
 theme = "tanuki"
+build_search_index = true
 
-[extra]
-# Theme mode: "docs" | "book" | "site"
-mode = "site"
+[markdown]
+highlight_code = true
+highlight_theme = "css"
 
-# Author name
-author = "Your Name"
-
-# GitHub repository URL
-github = "https://github.com/yourusername/yourrepo"
-
-# Theme settings
-default_theme = "auto"  # "light" | "dark" | "auto"
-show_theme_toggle = true
-
-# Navigation links
-nav_links = [
-    { name = "Home", url = "/" },
-    { name = "Blog", url = "/blog" },
-    { name = "About", url = "/about" },
-]
-```
-
-## Modes
-
-### Documentation Mode (`mode = "docs"`)
-
-Perfect for technical documentation with versioning support.
-
-```toml
 [extra]
 mode = "docs"
+github = "https://github.com/you/project"
 
-[extra.docs]
-versioned = true
-current_version = "1.0"
-versions = [
-    { version = "1.0", path = "/docs/1.0", latest = true },
-    { version = "0.9", path = "/docs/0.9", latest = false },
+# Optional: version picker
+[extra.versions]
+current = "2.0.0"
+list = [
+    { version = "2.0.0", url = "/", label = "latest" },
+    { version = "1.0.0", url = "/v1/" },
 ]
 ```
 
-Features:
-- Sidebar with table of contents
-- Version picker dropdown
-- Prev/Next navigation buttons
-- Print all pages
-- Keyboard navigation (arrow keys)
-
-### E-book Mode (`mode = "book"`)
-
-Ideal for online books and guides.
+### Book Mode
 
 ```toml
+base_url = "https://book.example.com"
+title = "The Complete Guide"
+theme = "tanuki"
+build_search_index = true
+
+[markdown]
+highlight_code = true
+highlight_theme = "css"
+
 [extra]
 mode = "book"
-
-[extra.book]
-show_landing = true
-show_toc = true
+github = "https://github.com/you/book"
 ```
 
-Features:
-- Chapter navigation
-- Reading-optimized layout
-- Print functionality
-- No versioning overhead
-
-### Site/Blog Mode (`mode = "site"`)
-
-For personal sites, blogs, and landing pages.
+### Blog Mode
 
 ```toml
+base_url = "https://blog.example.com"
+title = "My Blog"
+theme = "tanuki"
+generate_feeds = true
+
+taxonomies = [
+    { name = "tags", feed = true },
+]
+
+[markdown]
+highlight_code = true
+highlight_theme = "css"
+
 [extra]
-mode = "site"
+mode = "blog"
 
-[extra.site]
-show_hero = true
-posts_per_page = 10
+[extra.hero]
+title = "Welcome to my blog"
+subtitle = "Thoughts on code and craft"
 
-# Call-to-action buttons
-cta_primary = { text = "Get Started", url = "/docs" }
-cta_secondary = { text = "Learn More", url = "/about" }
+[[extra.nav]]
+name = "Blog"
+url = "/blog/"
+
+[[extra.nav]]
+name = "About"
+url = "/about/"
 ```
-
-Features:
-- Hero section
-- Blog post cards
-- Tag support
-- Pagination
-
-## Customization
-
-### Colors
-
-The theme uses Catppuccin color palettes. Override CSS variables in your own stylesheet:
-
-```css
-:root {
-  --color-accent: var(--ctp-pink);  /* Change accent color */
-}
-```
-
-### Fonts
-
-To use different fonts, override in your `config.toml`:
-
-```toml
-[extra]
-custom_fonts = true
-```
-
-Then add your own `@font-face` declarations.
 
 ## Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
-| `ArrowLeft` | Previous page (docs/book mode) |
-| `ArrowRight` | Next page (docs/book mode) |
+| `←` / `→` | Previous / Next page |
 | `/` | Open search |
-| `Esc` | Close search/sidebar |
+| `Esc` | Close overlays |
 
 ## Browser Support
 
-- Chrome/Edge 88+
-- Firefox 78+
-- Safari 14+
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
-
-## License
-
-MIT License - see [LICENSE](LICENSE)
+Modern browsers (Chrome 88+, Firefox 78+, Safari 14+, Edge 88+)
 
 ## Credits
 
-- [Catppuccin](https://github.com/catppuccin/catppuccin) - Color palette
-- [Geist](https://vercel.com/font) - Typography
-- [Lucide](https://lucide.dev) - Icons
-- [Zola](https://www.getzola.org) - Static site generator
+- [Catppuccin](https://catppuccin.com) — Color palette
+- [Geist](https://vercel.com/font) — Typography
+- [Lucide](https://lucide.dev) — Icons
+- [Zola](https://www.getzola.org) — Static site generator
+
+## License
+
+[MIT](LICENSE)
 
 ---
 
-Made with love by [raskell.io](https://raskell.io)
+Made with care by [raskell.io](https://raskell.io)
