@@ -14,7 +14,7 @@
             </button>
         </div>
 
-        <nav class="toc-overlay__nav" aria-label="{% if mode == 'docs' %}Documentation{% else %}Book chapters{% endif %}">
+        <nav class="toc-overlay__nav" aria-label="{% if mode == 'docs' %}Table of contents{% else %}Book chapters{% endif %}">
             {% set root_section = get_section(path="_index.md") %}
 
             {% if mode == "docs" %}

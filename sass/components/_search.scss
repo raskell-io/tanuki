@@ -2,15 +2,17 @@
 // Search Component
 // =============================================================================
 
-// Search toggle button
+// Search toggle button (matches btn--icon btn--ghost)
 .search-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
+  padding: 0;
+  background: transparent;
   color: var(--color-text-secondary);
-  border-radius: 8px;
+  border-radius: 10px;
   transition: all 0.2s ease;
 
   svg {

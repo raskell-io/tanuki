@@ -22,7 +22,7 @@
    Usage: {{ macros::sidebar_nav(pages=section.pages, current_path=current_path) }}
    ----------------------------------------------------------------------------- #}
 {% macro sidebar_nav(pages, current_path="") %}
-<nav class="sidebar__nav" role="navigation" aria-label="Documentation">
+<nav class="sidebar__nav" role="navigation" aria-label="Table of contents">
     <ul class="nav-list">
         {% for page in pages %}
         <li class="nav-item">

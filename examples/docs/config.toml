@@ -9,12 +9,13 @@ generate_feeds = false
 
 [markdown]
 highlight_code = true
-highlight_theme = "base16-ocean-dark"
+highlight_theme = "css"
 insert_anchor_links = "left"
 
 [extra]
 mode = "docs"
 github = "https://github.com/raskell-io/tanuki"
+edit_url = "https://github.com/raskell-io/tanuki/edit/main/examples/docs/content"
 show_theme_toggle = true
 
 # Version picker (docs mode only)

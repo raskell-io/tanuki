@@ -94,6 +94,16 @@
             {% include "partials/theme-toggle.html" %}
             {% endif %}
 
+            {# Edit on GitHub link #}
+            {% if config.extra.edit_url and page %}
+            <a href="{{ config.extra.edit_url }}/{{ page.relative_path }}" class="btn btn--icon btn--ghost" aria-label="Edit this page on GitHub" target="_blank" rel="noopener" title="Edit this page">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    <path d="m15 5 4 4"/>
+                </svg>
+            </a>
+            {% endif %}
+
             {# GitHub link #}
             {% if config.extra.github %}
             <a href="{{ config.extra.github }}" class="btn btn--icon btn--ghost" aria-label="GitHub" target="_blank" rel="noopener">

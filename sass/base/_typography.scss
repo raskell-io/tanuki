@@ -221,6 +221,60 @@ li {
   }
 }
 
+// Task list / Checkboxes
+// Remove bullet when list item contains a checkbox
+li:has(> input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.5rem;
+}
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-right: 0.5rem;
+  border: 2px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-elevated);
+  vertical-align: middle;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+
+  &:checked {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 1px;
+      width: 5px;
+      height: 9px;
+      border: solid var(--ctp-base);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+  }
+
+  &:hover:not(:checked) {
+    border-color: var(--color-accent);
+  }
+}
+
+// Light theme: white checkbox background
+[data-theme="light"] input[type="checkbox"] {
+  background: #fff;
+  border-color: var(--ctp-surface1);
+
+  &:checked {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+}
+
 // Horizontal rule
 hr {
   margin: 2rem 0;
