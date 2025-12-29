@@ -49,8 +49,13 @@
         </div>
     </header>
     {% else %}
-    {# For docs/book mode, still add the hidden heading for accessibility #}
-    <h1 id="article-title" class="sr-only" itemprop="headline">{{ page.title }}</h1>
+    {# For docs/book mode, show title as visible heading #}
+    <header class="article__header article__header--docs">
+        <h1 id="article-title" itemprop="headline">{{ page.title }}</h1>
+        {% if page.description %}
+        <p class="article__description" itemprop="description">{{ page.description }}</p>
+        {% endif %}
+    </header>
     {% endif %}
 
     <div class="article__content" itemprop="articleBody">
