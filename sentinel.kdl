@@ -1,15 +1,11 @@
 // Sentinel configuration for serving Tanuki theme examples
-// TODO: Enable once Sentinel static file serving is ready
 // Usage: sentinel -c sentinel.kdl
-//
-// For now, use: python3 -m http.server 8080 -d public
-// Or: mise run serve:all
 
 server {
-    worker-threads 2
-    max-connections 1000
+    worker-threads 1
+    max-connections 100
     graceful-shutdown-timeout-secs 5
-    daemon false
+    daemon #false
 }
 
 listeners {
@@ -31,15 +27,33 @@ routes {
             path-prefix "/"
         }
 
-        upstream null
+        upstream #null
 
-        static_files {
+        static-files {
             root "./public"
             index "index.html"
-            directory_listing false
-            cache_control "public, max-age=3600"
-            compress true
+            directory-listing #false
+            cache-control "no-cache"
+            compress #true
             fallback "index.html"
+
+            mime-types {
+                "avif" "image/avif"
+                "woff2" "font/woff2"
+            }
         }
+    }
+}
+
+limits {
+    max-header-size-bytes 8192
+    max-header-count 50
+    max-body-size-bytes 1048576
+}
+
+observability {
+    logging {
+        level "info"
+        format "pretty"
     }
 }

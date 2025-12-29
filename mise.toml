@@ -1,8 +1,8 @@
 [tools]
 zola = "0.19.2"
 
-# Sentinel is built from the local repo since the crates.io version is outdated
-# Install with: cargo install --path ../sentinel/crates/proxy
+# Sentinel for static file serving (serve:all task)
+# Install: curl -fsSL https://getsentinel.raskell.io | sh
 
 [tasks.build]
 description = "Build all example sites"
@@ -46,7 +46,7 @@ ln -sf ../blog public/tanuki/blog
 ln -sf ../index.html public/tanuki/index.html
 
 echo "Build complete! Output in public/"
-echo "Serve with: python3 -m http.server 8080 -d public"
+echo "Serve with: mise run serve:all"
 echo "Then visit: http://127.0.0.1:8080/tanuki/"
 """
 
@@ -86,13 +86,23 @@ description = "Clean build artifacts"
 run = "rm -rf public"
 
 [tasks."serve:all"]
-description = "Serve all built examples"
+description = "Serve all built examples with Sentinel"
 depends = ["build"]
 run = """
 #!/usr/bin/env bash
-echo "Starting server on http://127.0.0.1:8080/tanuki/"
+echo "Starting Sentinel on http://127.0.0.1:8080/tanuki/"
 echo "Press Ctrl+C to stop"
-# TODO: Use Sentinel once static file serving is ready
-# sentinel -c sentinel.kdl
-python3 -m http.server 8080 -d public
+
+# Find sentinel in common locations
+if command -v sentinel &> /dev/null; then
+    sentinel -c sentinel.kdl
+elif [ -x "$HOME/.local/bin/sentinel" ]; then
+    "$HOME/.local/bin/sentinel" -c sentinel.kdl
+elif [ -x "$HOME/.cargo/bin/sentinel" ]; then
+    "$HOME/.cargo/bin/sentinel" -c sentinel.kdl
+else
+    echo "Error: Sentinel not found. Install with:"
+    echo "  curl -fsSL https://getsentinel.raskell.io | sh"
+    exit 1
+fi
 """
