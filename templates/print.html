@@ -116,18 +116,26 @@
             <h2>Table of Contents</h2>
             <ol>
                 {% set section = get_section(path="_index.md") %}
+                {% set chapter_num = 0 %}
                 {% for page in section.pages %}
-                <li><a href="#chapter-{{ loop.index }}">{{ page.title }}</a></li>
+                {% if page.extra.hide_from_toc is not defined or not page.extra.hide_from_toc %}
+                {% set_global chapter_num = chapter_num + 1 %}
+                <li><a href="#chapter-{{ chapter_num }}">{{ page.title }}</a></li>
+                {% endif %}
                 {% endfor %}
             </ol>
         </nav>
 
         {% set section = get_section(path="_index.md") %}
+        {% set chapter_num = 0 %}
         {% for page in section.pages %}
-        <article class="print-page__chapter" id="chapter-{{ loop.index }}">
+        {% if page.extra.hide_from_toc is not defined or not page.extra.hide_from_toc %}
+        {% set_global chapter_num = chapter_num + 1 %}
+        <article class="print-page__chapter" id="chapter-{{ chapter_num }}">
             <h1>{{ page.title }}</h1>
             {{ page.content | safe }}
         </article>
+        {% endif %}
         {% endfor %}
 
         <footer class="print-page__footer">

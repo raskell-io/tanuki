@@ -22,12 +22,14 @@
             {% if root_section %}
             <ul class="toc-overlay__list">
                 {% for pg in root_section.pages %}
+                {% if pg.extra.hide_from_toc is not defined or not pg.extra.hide_from_toc %}
                 <li class="toc-overlay__item">
                     <a href="{{ pg.permalink | safe }}" class="toc-overlay__link{% if current_path is defined and current_path == pg.path %} toc-overlay__link--active{% endif %}">
                         <span class="toc-overlay__chapter">{{ loop.index0 }}.</span>
                         <span class="toc-overlay__page-title">{{ pg.title }}</span>
                     </a>
                 </li>
+                {% endif %}
                 {% endfor %}
             </ul>
 
@@ -61,12 +63,14 @@
                     </a>
                 </li>
                 {% for page in root_section.pages %}
+                {% if page.extra.hide_from_toc is not defined or not page.extra.hide_from_toc %}
                 <li class="toc-overlay__item">
                     <a href="{{ page.permalink | safe }}" class="toc-overlay__link{% if current_path is defined and current_path == page.path %} toc-overlay__link--active{% endif %}">
                         <span class="toc-overlay__chapter">Chapter {{ loop.index }}</span>
                         <span class="toc-overlay__page-title">{{ page.title }}</span>
                     </a>
                 </li>
+                {% endif %}
                 {% endfor %}
             </ul>
             {% endif %}

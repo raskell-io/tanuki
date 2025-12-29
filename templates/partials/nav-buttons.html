@@ -1,14 +1,15 @@
 {# Previous/Next Navigation Buttons #}
 {% if page %}
 {# Determine prev/next based on sorting: weight-sorted uses lower/higher, date-sorted uses earlier/later #}
-{% if page.lower %}
+{# Skip pages with hide_from_nav set #}
+{% if page.lower and (page.lower.extra.hide_from_nav is not defined or not page.lower.extra.hide_from_nav) %}
     {% set prev_page = page.lower %}
-{% elif page.earlier %}
+{% elif page.earlier and (page.earlier.extra.hide_from_nav is not defined or not page.earlier.extra.hide_from_nav) %}
     {% set prev_page = page.earlier %}
 {% endif %}
-{% if page.higher %}
+{% if page.higher and (page.higher.extra.hide_from_nav is not defined or not page.higher.extra.hide_from_nav) %}
     {% set next_page = page.higher %}
-{% elif page.later %}
+{% elif page.later and (page.later.extra.hide_from_nav is not defined or not page.later.extra.hide_from_nav) %}
     {% set next_page = page.later %}
 {% endif %}
 

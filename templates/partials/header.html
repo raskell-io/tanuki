@@ -49,7 +49,11 @@
         {# Logo / Title #}
         <a href="{{ config.base_url | safe }}" class="header__logo" aria-label="{{ config.title }} - Go to homepage">
             {% if config.extra.logo %}
-            <img src="{{ get_url(path=config.extra.logo) | safe }}" alt="" aria-hidden="true">
+            {% set logo_path = config.extra.logo %}
+            {% if not logo_path is containing("/") %}
+                {% set logo_path = "assets/" ~ logo_path %}
+            {% endif %}
+            <img src="{{ get_url(path=logo_path) | safe }}" alt="" aria-hidden="true">
             {% endif %}
             <span>{{ config.title }}</span>
         </a>

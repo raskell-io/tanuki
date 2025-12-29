@@ -22,12 +22,14 @@
             <div class="toc__section">
                 <ol class="toc__list toc__list--numbered" start="0">
                     {% for pg in root_section.pages %}
+                    {% if pg.extra.hide_from_toc is not defined or not pg.extra.hide_from_toc %}
                     <li class="toc__item">
                         <a href="{{ pg.permalink | safe }}" class="toc__link {% if current_path is defined and current_path == pg.path %}active{% endif %}">
                             <span class="toc__number">{{ loop.index0 }}.</span>
                             {{ pg.title }}
                         </a>
                     </li>
+                    {% endif %}
                     {% endfor %}
                 </ol>
             </div>
