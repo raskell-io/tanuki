@@ -19,36 +19,73 @@
 {% endblock %}
 
 {% block content %}
-<article class="article" itemscope itemtype="https://schema.org/Article" aria-labelledby="article-title">
-    {% if mode == "site" or mode == "blog" %}
-    <header class="article__header">
-        <h1 id="article-title" itemprop="headline">{{ page.title }}</h1>
+{% if mode == "site" or mode == "blog" %}
+{# raskell.io style article page #}
+<div class="container">
+    <article>
+        <header class="article-header">
+            <div class="thumb">
+                <div>
+                    <h1>{{ page.title }}</h1>
+                    <div class="post-meta">
+                        <div class="meta-line">
+                            <span class="author">{{ page.extra.author | default(value=config.extra.author) }}</span>
+                            <span class="separator">·</span>
+                            <time>{{ page.date | date(format="%B %d, %Y") }}</time>
+                            <span class="separator">·</span>
+                            <span class="reading-time">{{ page.reading_time }} min read</span>
+                        </div>
+                        {% if page.taxonomies.tags or page.taxonomies.series %}
+                        <div class="article-taxonomies">
+                            {% if page.taxonomies.tags %}
+                            <div class="tags">
+                                {% for tag in page.taxonomies.tags %}
+                                <a href="{{ get_taxonomy_url(kind='tags', name=tag) }}" class="tag">{{ tag }}</a>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if page.taxonomies.series %}
+                            <div class="series-badge">
+                                Series: <a href="{{ get_taxonomy_url(kind='series', name=page.taxonomies.series[0]) }}">{{ page.taxonomies.series[0] }}</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% if page.extra.image %}
+            <img src="/{{ page.extra.image }}" alt="{{ page.title }}" class="post-thumbnail" loading="lazy" decoding="async">
+            {% endif %}
+        </header>
+    </article>
 
-        {% if page.description %}
-        <p class="article__description" itemprop="description">{{ page.description }}</p>
+    <div class="article-post">
+        {{ page.content | safe }}
+    </div>
+</div>
+
+<div class="container">
+    <nav class="flex container suggested">
+        {% if page.lower %}
+        <a rel="prev" href="{{ page.lower.permalink }}" title="Previous post (older)">
+            <span>← Previous</span>
+            <strong>{{ page.lower.title }}</strong>
+        </a>
         {% endif %}
 
-        <div class="article__meta">
-            {% if page.date is defined and page.date %}
-            <time datetime="{{ page.date | date(format='%Y-%m-%d') }}" itemprop="datePublished">{{ page.date | date(format="%B %d, %Y") }}</time>
-            {% endif %}
+        {% if page.higher %}
+        <a rel="next" href="{{ page.higher.permalink }}" title="Next post (newer)">
+            <span>Next →</span>
+            <strong>{{ page.higher.title }}</strong>
+        </a>
+        {% endif %}
+    </nav>
+</div>
 
-            {% if page.reading_time %}
-            <span aria-hidden="true">&middot;</span>
-            <span><span class="sr-only">Estimated reading time: </span>{{ page.reading_time }} min read</span>
-            {% endif %}
-
-            {% if page.taxonomies.tags %}
-            <span aria-hidden="true">&middot;</span>
-            <span itemprop="keywords">
-                {% for tag in page.taxonomies.tags %}
-                <a href="{{ get_taxonomy_url(kind='tags', name=tag) | safe }}" class="tag" rel="tag">{{ tag }}</a>{% if not loop.last %} {% endif %}
-                {% endfor %}
-            </span>
-            {% endif %}
-        </div>
-    </header>
-    {% else %}
+{% else %}
+{# Original tanuki page layout for docs/book/product modes #}
+<article class="article" itemscope itemtype="https://schema.org/Article" aria-labelledby="article-title">
     {# For docs/book mode, show title as visible heading #}
     <header class="article__header article__header--docs">
         <h1 id="article-title" itemprop="headline">{{ page.title }}</h1>
@@ -56,21 +93,10 @@
         <p class="article__description" itemprop="description">{{ page.description }}</p>
         {% endif %}
     </header>
-    {% endif %}
 
     <div class="article__content" itemprop="articleBody">
         {{ page.content | safe }}
     </div>
-
-    {% if page.taxonomies.tags and (mode == "site" or mode == "blog") %}
-    <footer class="article__footer">
-        <nav class="article__tags" aria-label="Article tags">
-            {% for tag in page.taxonomies.tags %}
-            <a href="{{ get_taxonomy_url(kind='tags', name=tag) | safe }}" class="tag" rel="tag">{{ tag }}</a>
-            {% endfor %}
-        </nav>
-    </footer>
-    {% endif %}
 
     {# Hidden metadata for structured data #}
     {% if config.extra.author is defined and config.extra.author %}
@@ -98,5 +124,6 @@
     </a>
     {% endif %}
 </nav>
+{% endif %}
 {% endif %}
 {% endblock %}

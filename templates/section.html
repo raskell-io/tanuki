@@ -11,6 +11,133 @@
 {% endblock %}
 
 {% block content %}
+{% if mode == "site" or mode == "blog" %}
+{# raskell.io style articles listing #}
+<header>
+    <div class="container">
+        <h1>{{ section.title }}</h1>
+        {% if section.extra.subtitle %}
+        <p class="subtitle">{{ section.extra.subtitle }}</p>
+        {% endif %}
+    </div>
+</header>
+
+<section>
+    <div class="container">
+        <div class="search-container">
+            <input
+                id="search-query"
+                type="search"
+                placeholder="Search articles..."
+                autocomplete="off"
+            />
+            <div class="search-shortcuts">
+                <kbd>/</kbd>
+                <kbd>⌘K</kbd>
+            </div>
+        </div>
+
+        <section id="articles-list"></section>
+    </div>
+</section>
+
+<script>
+    // Render articles with yyyy-mm-dd prefix
+    const articlesList = document.getElementById('articles-list');
+    const articles = [
+        {% for page in section.pages %}
+        {
+            title: {{ page.title | json_encode | safe }},
+            permalink: {{ page.permalink | json_encode | safe }},
+            date: {{ page.date | json_encode | safe }},
+            dateFormatted: {{ page.date | date(format="%Y-%m-%d") | json_encode | safe }},
+            description: {{ page.description | default(value="") | json_encode | safe }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    function renderArticles(articlesToRender) {
+        // Sort by date descending
+        const sorted = [...articlesToRender].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        let html = '<div class="posts">';
+        sorted.forEach(article => {
+            html += `
+                <div class="post" data-title="${article.title.toLowerCase()}" data-date="${article.dateFormatted}" data-description="${article.description.toLowerCase()}">
+                    <a href="${article.permalink}">
+                        <div class="post-row">
+                            <time>${article.dateFormatted}</time>
+                            <h3>${article.title}</h3>
+                        </div>
+                    </a>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        articlesList.innerHTML = html;
+    }
+
+    renderArticles(articles);
+</script>
+
+<script>
+    const searchInput = document.getElementById("search-query");
+
+    // Simple search filtering
+    searchInput.addEventListener("input", function () {
+        const query = this.value.trim().toLowerCase();
+        const posts = articlesList.querySelectorAll(".post");
+
+        if (query.length === 0) {
+            // Show all posts
+            posts.forEach((post) => (post.style.display = ""));
+            return;
+        }
+
+        // Filter posts by title, date, or description
+        posts.forEach((post) => {
+            const title = post.getAttribute("data-title") || "";
+            const date = post.getAttribute("data-date") || "";
+            const description = post.getAttribute("data-description") || "";
+
+            const searchText = `${title} ${date} ${description}`;
+
+            if (searchText.includes(query)) {
+                post.style.display = "";
+            } else {
+                post.style.display = "none";
+            }
+        });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", function (e) {
+        // Cmd+K or Ctrl+K
+        if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }
+        // Forward slash (/) when not in an input
+        else if (
+            e.key === "/" &&
+            !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
+        ) {
+            e.preventDefault();
+            searchInput.focus();
+        }
+        // Escape to clear search
+        else if (e.key === "Escape" && document.activeElement === searchInput) {
+            searchInput.value = "";
+            searchInput.dispatchEvent(new Event("input"));
+            searchInput.blur();
+        }
+    });
+</script>
+
+{% else %}
+{# Original tanuki section layout for docs/book modes #}
 <article class="section-page">
     <header class="section-page__header">
         <h1>{{ section.title }}</h1>
@@ -25,41 +152,6 @@
     </div>
     {% endif %}
 
-    {% if mode == "site" or mode == "blog" %}
-    {# Blog/Site mode - show posts as cards #}
-    {% if section.pages %}
-    <div class="card-grid">
-        {% for page in section.pages %}
-        <article class="card">
-            <h2 class="card__title">
-                <a href="{{ page.permalink | safe }}">{{ page.title }}</a>
-            </h2>
-            {% if page.description %}
-            <p class="card__description">{{ page.description }}</p>
-            {% endif %}
-            {% if page.date %}
-            <time datetime="{{ page.date }}">{{ page.date | date(format="%B %d, %Y") }}</time>
-            {% endif %}
-        </article>
-        {% endfor %}
-    </div>
-
-    {# Pagination #}
-    {% if paginator %}
-    <nav class="pagination" aria-label="Pagination">
-        {% if paginator.previous %}
-        <a href="{{ paginator.previous | safe }}" class="btn btn--secondary">Previous</a>
-        {% endif %}
-        <span class="pagination__info">Page {{ paginator.current_index }} of {{ paginator.number_pagers }}</span>
-        {% if paginator.next %}
-        <a href="{{ paginator.next | safe }}" class="btn btn--secondary">Next</a>
-        {% endif %}
-    </nav>
-    {% endif %}
-    {% endif %}
-
-    {% elif mode == "docs" or mode == "book" %}
-    {# Docs/Book mode - show page list #}
     {% if section.pages %}
     <ul class="page-list">
         {% for page in section.pages %}
@@ -89,6 +181,6 @@
     </section>
     {% endfor %}
     {% endif %}
-    {% endif %}
 </article>
+{% endif %}
 {% endblock %}

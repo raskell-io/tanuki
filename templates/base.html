@@ -242,6 +242,30 @@
     {% endif %}
 
     {# ===== Theme script (inline to prevent flash) ===== #}
+    {% set mode = config.extra.mode | default(value="site") %}
+    {% if mode == "site" or mode == "blog" %}
+    {# raskell.io style 3-way theme toggle for site/blog mode #}
+    <script>
+        (function() {
+            var colorSchemeKey = 'ThemeColorScheme';
+            var colorSchemeItem = localStorage.getItem(colorSchemeKey) || 'auto';
+            var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+            // Set theme setting (light/dark/auto)
+            document.documentElement.dataset.themeSetting = colorSchemeItem;
+
+            // Set effective theme (light/dark)
+            if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+                document.documentElement.dataset.userColorScheme = 'dark';
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.dataset.userColorScheme = 'light';
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    {% else %}
+    {# Original tanuki theme toggle for docs/book/product modes #}
     <script>
         (function() {
             try {
@@ -254,6 +278,7 @@
             } catch(e) {}
         })();
     </script>
+    {% endif %}
 
     {% block head %}{% endblock %}
 </head>
@@ -297,8 +322,8 @@
     {# Sidebar overlay for mobile #}
     <div class="sidebar-overlay" aria-hidden="true"></div>
 
-    {# Search overlay #}
-    {% if config.build_search_index %}
+    {# Search overlay - only for docs/book/product modes (site/blog has it in header) #}
+    {% if config.build_search_index and mode != "site" and mode != "blog" %}
     {% include "partials/search.html" %}
     {% endif %}
 
@@ -307,8 +332,8 @@
     {% include "partials/toc-overlay.html" %}
     {% endif %}
 
-    {# Nav overlay for mobile menu (blog/site modes) #}
-    {% if mode != "docs" and mode != "book" and mode != "product" %}
+    {# Nav overlay for mobile menu - only for product mode (site/blog has it in header, docs/book use sidebar) #}
+    {% if mode == "product" %}
     {% include "partials/nav-overlay.html" %}
     {% endif %}
 
@@ -322,6 +347,18 @@
     {% endif %}
 
     {# Scripts #}
+    {% if mode == "site" or mode == "blog" %}
+    {# raskell.io style scripts for site/blog mode #}
+    <script src="{{ get_url(path='js/anchors.js') | safe }}"></script>
+    <script src="{{ get_url(path='js/scroll-to-top.js') | safe }}"></script>
+
+    {% if config.build_search_index %}
+    <script src="{{ get_url(path='elasticlunr.min.js') | safe }}"></script>
+    <script src="{{ get_url(path='search_index.en.js') | safe }}"></script>
+    <script src="{{ get_url(path='js/search-raskell.js') | safe }}"></script>
+    {% endif %}
+    {% else %}
+    {# Original tanuki scripts for docs/book/product modes #}
     <script src="{{ get_url(path='js/theme.js') | safe }}" defer></script>
     <script src="{{ get_url(path='js/navigation.js') | safe }}" defer></script>
     <script src="{{ get_url(path='js/code.js') | safe }}" defer></script>
@@ -330,6 +367,7 @@
     <script src="{{ get_url(path='elasticlunr.min.js') | safe }}"></script>
     <script src="{{ get_url(path='search_index.en.js') | safe }}"></script>
     <script src="{{ get_url(path='js/search.js') | safe }}" defer></script>
+    {% endif %}
     {% endif %}
 
     {% block scripts %}{% endblock %}

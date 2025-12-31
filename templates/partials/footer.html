@@ -1,4 +1,19 @@
-{# Footer #}
+{# Footer - raskell.io style for site/blog mode #}
+{% set mode = config.extra.mode | default(value="site") %}
+
+{% if mode == "site" or mode == "blog" %}
+<footer class="footer flex" role="contentinfo">
+    <section class="container">
+        <nav class="footer-links" role="navigation" aria-label="Footer navigation">
+            {% if config.generate_feeds %}
+            <a href="{{ get_url(path='rss.xml') }}">RSS</a>
+            {% endif %}
+        </nav>
+    </section>
+    <script src="{{ get_url(path='js/app.js') | safe }}"></script>
+</footer>
+{% else %}
+{# Original tanuki footer for docs/book/product modes #}
 <footer class="footer" role="contentinfo">
     <div class="container">
         <div class="footer__content">
@@ -20,3 +35,4 @@
         </div>
     </div>
 </footer>
+{% endif %}
