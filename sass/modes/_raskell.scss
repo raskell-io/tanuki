@@ -566,36 +566,6 @@
         transform: rotate(0deg) scale(1);
     }
 
-    // Theme setting states
-    [data-theme-setting="light"] .theme-toggle {
-        .theme-toggle__auto {
-            opacity: 0;
-            transform: rotate(-90deg) scale(0.5);
-        }
-        .theme-toggle__sun {
-            opacity: 1;
-            transform: rotate(0deg) scale(1);
-        }
-    }
-
-    [data-theme-setting="dark"] .theme-toggle {
-        .theme-toggle__auto {
-            opacity: 0;
-            transform: rotate(-90deg) scale(0.5);
-        }
-        .theme-toggle__moon {
-            opacity: 1;
-            transform: rotate(0deg) scale(1);
-        }
-    }
-
-    [data-theme-setting="auto"] .theme-toggle {
-        .theme-toggle__auto {
-            opacity: 1;
-            transform: rotate(0deg) scale(1);
-        }
-    }
-
     @keyframes bounce {
         0%, 100% { transform: scale(1); }
         25% { transform: scale(1.15); }
@@ -1553,5 +1523,38 @@
         &:focus {
             top: 0;
         }
+    }
+}
+
+// =============================================================================
+// Theme Toggle States (must be at root level, not inside mode selector)
+// =============================================================================
+
+[data-theme-setting="light"] .theme-toggle {
+    .theme-toggle__auto {
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.5);
+    }
+    .theme-toggle__sun {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+}
+
+[data-theme-setting="dark"] .theme-toggle {
+    .theme-toggle__auto {
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.5);
+    }
+    .theme-toggle__moon {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+}
+
+[data-theme-setting="auto"] .theme-toggle {
+    .theme-toggle__auto {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
     }
 }
