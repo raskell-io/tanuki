@@ -53,6 +53,98 @@
 </section>
 {% endif %}
 
+{% elif mode == "product" %}
+{# Product mode - Landing page for products/tools #}
+{# Override this template in your site's templates/index.html for custom landing pages #}
+<section class="product-hero">
+    <h1 class="product-hero__title">{{ config.title }}</h1>
+    <p class="product-hero__subtitle">{{ config.description }}</p>
+    <div class="product-hero__actions">
+        {% if config.extra.cta_primary %}
+        <a href="{{ config.extra.cta_primary.url | safe }}" class="btn btn--primary btn--lg">
+            {{ config.extra.cta_primary.text }}
+        </a>
+        {% endif %}
+        {% if config.extra.cta_secondary %}
+        <a href="{{ config.extra.cta_secondary.url | safe }}" class="btn btn--secondary btn--lg">
+            {{ config.extra.cta_secondary.text }}
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+{# Features section from config #}
+{% if config.extra.product.features is defined %}
+<section class="product-features product-section">
+    <div class="product-section__container">
+        {% if config.extra.product.features_title is defined %}
+        <h2 class="product-section__title">{{ config.extra.product.features_title }}</h2>
+        {% endif %}
+        <div class="product-feature-grid">
+            {% for feature in config.extra.product.features %}
+            <article class="product-feature-card">
+                {% if feature.icon %}
+                <div class="product-feature-card__icon">{{ feature.icon | safe }}</div>
+                {% endif %}
+                <h3 class="product-feature-card__title">{{ feature.title }}</h3>
+                <p class="product-feature-card__description">{{ feature.description }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{# Install section #}
+{% if config.extra.product.install_command is defined %}
+<section class="product-install product-section">
+    <div class="product-section__container">
+        <h2 class="product-section__title">Install</h2>
+        <div class="product-install__code">
+            <code><span class="product-install__cmd">{{ config.extra.product.install_command }}</span></code>
+        </div>
+        {% if config.extra.product.install_alternatives %}
+        <p class="product-install__alternatives">{{ config.extra.product.install_alternatives | safe }}</p>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+{# Product footer #}
+<footer class="product-footer">
+    <div class="product-footer__container">
+        <div class="product-footer__content">
+            <div class="product-footer__brand">
+                {% if config.extra.product.icon %}
+                <div class="product-footer__icon-wrapper">
+                    <div class="product-footer__icon-glow"></div>
+                    <img src="{{ get_url(path=config.extra.product.icon) | safe }}" alt="" class="product-footer__icon">
+                </div>
+                {% endif %}
+                <div class="product-footer__tagline">
+                    <p class="product-footer__title">{{ config.extra.product.tagline | default(value=config.description) }}</p>
+                    <p class="product-footer__description">{{ config.extra.product.footer_description | default(value="") }}</p>
+                </div>
+            </div>
+            <nav class="product-footer__links">
+                {% if config.extra.product.footer_links is defined %}
+                {% for col in config.extra.product.footer_links %}
+                <div class="product-footer__col">
+                    <h4>{{ col.title }}</h4>
+                    {% for link in col.links %}
+                    <a href="{{ link.url | safe }}">{{ link.text }}</a>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% endif %}
+            </nav>
+        </div>
+        <div class="product-footer__bottom">
+            <p>&copy; {{ now() | date(format='%Y') }} {% if config.extra.author %}<a href="{{ config.extra.author_url | default(value='#') }}">{{ config.extra.author }}</a>{% endif %}. {{ config.extra.product.license | default(value="") }}</p>
+        </div>
+    </div>
+</footer>
+
 {% elif mode == "docs" or mode == "book" %}
 {# Docs/Book mode - redirect to first page or show landing #}
 {% set section = get_section(path="_index.md") %}

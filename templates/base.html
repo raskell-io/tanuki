@@ -264,11 +264,11 @@
     {# Get mode from config #}
     {% set mode = config.extra.mode | default(value="site") %}
 
-    {# Determine if header should be fixed (default: only for docs mode) #}
+    {# Determine if header should be fixed (default: for docs and product modes) #}
     {% if config.extra.fixed_header is defined %}
         {% set fixed_header = config.extra.fixed_header %}
     {% else %}
-        {% set fixed_header = mode == "docs" %}
+        {% set fixed_header = mode == "docs" or mode == "product" %}
     {% endif %}
 
     {# Layout wrapper #}
@@ -287,7 +287,7 @@
             </main>
 
             {% block footer %}
-            {% if mode != "docs" and mode != "book" %}
+            {% if mode != "docs" and mode != "book" and mode != "product" %}
             {% include "partials/footer.html" %}
             {% endif %}
             {% endblock %}
@@ -308,7 +308,7 @@
     {% endif %}
 
     {# Nav overlay for mobile menu (blog/site modes) #}
-    {% if mode != "docs" and mode != "book" %}
+    {% if mode != "docs" and mode != "book" and mode != "product" %}
     {% include "partials/nav-overlay.html" %}
     {% endif %}
 

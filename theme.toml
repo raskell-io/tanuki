@@ -1,8 +1,8 @@
 # Tanuki Theme for Zola (タヌキ)
-# A versatile, Catppuccin-themed Zola theme for documentation, e-books, and blogs
+# A versatile, Catppuccin-themed Zola theme for documentation, e-books, blogs, and product landing pages
 
 name = "tanuki"
-description = "A whimsical, Nintendo-inspired Zola theme with Catppuccin colors, Geist typography, and Lucide icons. Supports documentation (with versioning), e-books, and blog/landing pages. Named after the playful Japanese raccoon dog (タヌキ)."
+description = "A whimsical, Nintendo-inspired Zola theme with Catppuccin colors, Geist typography, and Lucide icons. Supports documentation (with versioning), e-books, blog/landing pages, and product landing pages. Named after the playful Japanese raccoon dog (タヌキ)."
 license = "MIT"
 homepage = "https://github.com/raskell-io/tanuki"
 repository = "https://github.com/raskell-io/tanuki"
@@ -14,7 +14,7 @@ name = "Raffael Schneider"
 homepage = "https://raskell.io"
 
 [extra]
-# Theme mode: "docs", "book", or "site"
+# Theme mode: "docs", "book", "site", or "product"
 mode = "site"
 
 [extra.docs]
@@ -29,3 +29,30 @@ show_landing = true
 [extra.site]
 # Blog/landing page settings
 show_hero = true
+
+[extra.product]
+# Product landing page settings
+# Example configuration for a Raskell product:
+#
+# icon = "assets/product-icon.png"
+# tagline = "A powerful tool for modern developers"
+# footer_description = "Built with care by the Raskell team."
+# license = "Licensed under Apache 2.0."
+# install_command = "curl -fsSL https://get.raskell.io/myproduct | sh"
+# install_alternatives = "Or download from <a href='https://github.com/raskell-io/myproduct/releases'>GitHub Releases</a>"
+# features_title = "Features"
+# features = [
+#   { title = "Fast", description = "Optimized for speed and efficiency.", icon = "<svg>...</svg>" },
+#   { title = "Secure", description = "Built with security best practices.", icon = "<svg>...</svg>" },
+#   { title = "Simple", description = "Easy to install and configure.", icon = "<svg>...</svg>" }
+# ]
+# footer_links = [
+#   { title = "Resources", links = [
+#     { text = "Documentation", url = "/docs" },
+#     { text = "GitHub", url = "https://github.com/raskell-io/myproduct" }
+#   ]},
+#   { title = "Community", links = [
+#     { text = "Issues", url = "https://github.com/raskell-io/myproduct/issues" },
+#     { text = "Discussions", url = "https://github.com/raskell-io/myproduct/discussions" }
+#   ]}
+# ]
