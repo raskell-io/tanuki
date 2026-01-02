@@ -1,7 +1,7 @@
 // Sentinel configuration for serving Tanuki theme examples
 // Usage: sentinel -c sentinel.kdl
 
-server {
+system {
     worker-threads 1
     max-connections 100
     graceful-shutdown-timeout-secs 5
