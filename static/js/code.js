@@ -287,19 +287,23 @@
       const buttonContainer = document.createElement('div');
       buttonContainer.className = 'code-buttons';
 
+      // Create copy button (always present, hover-only visibility handled by CSS)
+      const copyBtn = createCopyButton();
+      buttonContainer.appendChild(copyBtn);
+
       // Check if this is a KDL block
       const isKDL = isKDLBlock(pre, code);
 
       if (isKDL) {
-        // Create validate button
-        const validateBtn = createValidateButton();
-        buttonContainer.appendChild(validateBtn);
-
-        // Create edit button
+        // Create edit button (hover-only, before validate)
         const editBtn = createEditButton();
         buttonContainer.appendChild(editBtn);
 
-        // Create playground link (hidden initially)
+        // Create validate button (always visible for KDL)
+        const validateBtn = createValidateButton();
+        buttonContainer.appendChild(validateBtn);
+
+        // Create playground link (hidden initially, appears after validation)
         const playgroundLink = createPlaygroundLink();
         playgroundLink.style.display = 'none';
         buttonContainer.appendChild(playgroundLink);
@@ -348,10 +352,6 @@
 
         observer.observe(pre);
       }
-
-      // Create copy button
-      const copyBtn = createCopyButton();
-      buttonContainer.appendChild(copyBtn);
 
       pre.appendChild(buttonContainer);
 
