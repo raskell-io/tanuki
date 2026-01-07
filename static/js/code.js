@@ -122,9 +122,10 @@
   // Pages where KDL validation should be skipped (partial snippets)
   function shouldSkipValidation() {
     const path = window.location.pathname;
-    // Skip validation on pages with partial snippets
+    // Skip validation on pages with partial snippets or getting-started guides
     return path.includes('/reference/directives') ||
-           path.includes('/examples/');  // Example pages show advanced features as snippets
+           path.includes('/examples/') ||
+           path.includes('/getting-started/');  // Getting started guides show basic configs
   }
 
   async function loadWASM() {
