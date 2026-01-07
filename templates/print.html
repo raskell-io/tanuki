@@ -50,6 +50,38 @@
             border-bottom: none;
         }
 
+        .print-page__toc-section {
+            margin-top: 1rem;
+        }
+
+        .print-page__toc-section-title {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+
+        .print-page__toc ol {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .print-page__toc li {
+            margin: 0.25rem 0;
+        }
+
+        .print-page__section {
+            margin-bottom: 2rem;
+        }
+
+        .print-page__section-title {
+            font-size: 1.5rem;
+            color: #555;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            page-break-after: avoid;
+        }
+
         .print-page__chapter {
             margin-bottom: 3rem;
             padding-bottom: 2rem;
@@ -64,10 +96,12 @@
 
         .print-page__chapter h1 {
             color: #333;
+            page-break-after: avoid;
         }
 
         /* Hide interactive elements */
-        .no-print {
+        .no-print,
+        .code-buttons {
             display: none !important;
         }
 
@@ -88,6 +122,8 @@
             pre {
                 background: #f5f5f5 !important;
                 border: 1px solid #ddd !important;
+                white-space: pre-wrap;
+                word-wrap: break-word;
             }
 
             a {
@@ -112,30 +148,71 @@
             </p>
         </header>
 
+        {# Build Table of Contents #}
         <nav class="print-page__toc">
             <h2>Table of Contents</h2>
+
+            {% set root = get_section(path="_index.md") %}
+
+            {# Root pages #}
+            {% if root.pages | length > 0 %}
             <ol>
-                {% set section = get_section(path="_index.md") %}
-                {% set chapter_num = 0 %}
-                {% for page in section.pages %}
+                {% for page in root.pages %}
                 {% if page.extra.hide_from_toc is not defined or not page.extra.hide_from_toc %}
-                {% set_global chapter_num = chapter_num + 1 %}
-                <li><a href="#chapter-{{ chapter_num }}">{{ page.title }}</a></li>
+                {% if page.slug != "print" %}
+                <li><a href="#page-{{ page.slug }}">{{ page.title }}</a></li>
+                {% endif %}
                 {% endif %}
                 {% endfor %}
             </ol>
+            {% endif %}
+
+            {# Subsections #}
+            {% for subsection_path in root.subsections %}
+            {% set subsection = get_section(path=subsection_path) %}
+            <div class="print-page__toc-section">
+                <div class="print-page__toc-section-title">{{ subsection.title }}</div>
+                <ol>
+                    {% for page in subsection.pages %}
+                    {% if page.extra.hide_from_toc is not defined or not page.extra.hide_from_toc %}
+                    <li><a href="#page-{{ page.slug }}">{{ page.title }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                </ol>
+            </div>
+            {% endfor %}
         </nav>
 
-        {% set section = get_section(path="_index.md") %}
-        {% set chapter_num = 0 %}
-        {% for page in section.pages %}
+        {# Render all content #}
+        {% set root = get_section(path="_index.md") %}
+
+        {# Root pages first #}
+        {% for page in root.pages %}
         {% if page.extra.hide_from_toc is not defined or not page.extra.hide_from_toc %}
-        {% set_global chapter_num = chapter_num + 1 %}
-        <article class="print-page__chapter" id="chapter-{{ chapter_num }}">
+        {% if page.slug != "print" %}
+        <article class="print-page__chapter" id="page-{{ page.slug }}">
             <h1>{{ page.title }}</h1>
             {{ page.content | safe }}
         </article>
         {% endif %}
+        {% endif %}
+        {% endfor %}
+
+        {# Then each subsection #}
+        {% for subsection_path in root.subsections %}
+        {% set subsection = get_section(path=subsection_path) %}
+        <div class="print-page__section">
+            <h2 class="print-page__section-title">{{ subsection.title }}</h2>
+
+            {% for page in subsection.pages %}
+            {% if page.extra.hide_from_toc is not defined or not page.extra.hide_from_toc %}
+            <article class="print-page__chapter" id="page-{{ page.slug }}">
+                <h1>{{ page.title }}</h1>
+                {{ page.content | safe }}
+            </article>
+            {% endif %}
+            {% endfor %}
+        </div>
         {% endfor %}
 
         <footer class="print-page__footer">
