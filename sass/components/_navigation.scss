@@ -52,6 +52,45 @@
   }
 }
 
+// Home site link (back to main landing page)
+.header__home {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--color-accent);
+    background: var(--color-bg-surface);
+    border-color: var(--color-accent);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.header__home-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.header__separator {
+  width: 1px;
+  height: 24px;
+  background: var(--color-border);
+  margin: 0 0.25rem;
+}
+
 // -----------------------------------------------------------------------------
 // Sidebar Toggle (Docs Mode)
 // -----------------------------------------------------------------------------
@@ -1078,9 +1117,9 @@
 .scroll-progress {
   position: fixed;
   left: 0;
-  right: 0;
-  // Right below the header's border-bottom
-  top: 76px;
+  // JS dynamically sets left, width, and top based on sidebar and header
+  width: 100vw;
+  top: 57px;
   z-index: 102;
   height: 2px;
   background: transparent;

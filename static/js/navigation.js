@@ -43,6 +43,8 @@
       try {
         localStorage.setItem(STORAGE_KEY_SIDEBAR, isCollapsed);
       } catch (e) {}
+      // Notify other components of sidebar state change
+      window.dispatchEvent(new CustomEvent('sidebar-toggle'));
     }
 
     // Open mobile sidebar
@@ -669,8 +671,28 @@
     const progressContainer = document.querySelector('.scroll-progress');
     const progressBar = document.querySelector('.scroll-progress__bar');
     const progressPercent = document.querySelector('.scroll-progress__percent');
+    const header = document.querySelector('.header');
+    const sidebar = document.querySelector('.sidebar');
 
     if (!progressContainer || !progressBar) return;
+
+    // Update progress bar position based on header height and sidebar width
+    function updatePosition() {
+      if (header) {
+        const headerHeight = header.offsetHeight;
+        progressContainer.style.top = `${headerHeight}px`;
+      }
+
+      // Account for sidebar width on desktop when visible
+      if (sidebar && window.innerWidth >= 1024 && !sidebar.classList.contains('collapsed')) {
+        const sidebarWidth = sidebar.offsetWidth;
+        progressContainer.style.left = `${sidebarWidth}px`;
+        progressContainer.style.width = `calc(100vw - ${sidebarWidth}px)`;
+      } else {
+        progressContainer.style.left = '0';
+        progressContainer.style.width = '100vw';
+      }
+    }
 
     function updateProgress() {
       // Calculate scroll progress
@@ -714,7 +736,18 @@
       }
     }, { passive: true });
 
-    // Initial update
+    // Update position on resize (header height may change)
+    window.addEventListener('resize', () => {
+      updatePosition();
+    }, { passive: true });
+
+    // Update position when sidebar is toggled
+    window.addEventListener('sidebar-toggle', () => {
+      updatePosition();
+    });
+
+    // Initial updates
+    updatePosition();
     updateProgress();
   }
 
