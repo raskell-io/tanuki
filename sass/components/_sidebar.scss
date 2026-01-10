@@ -161,6 +161,19 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
+  text-decoration: none;
+  border-radius: var(--radius-sm, 4px);
+  transition: color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    color: var(--color-text);
+    background-color: var(--color-bg-elevated);
+  }
+
+  &.active {
+    color: var(--color-accent);
+    background-color: rgba(var(--color-accent-rgb, 203, 166, 247), 0.1);
+  }
 }
 
 .toc__list {

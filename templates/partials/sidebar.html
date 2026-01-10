@@ -39,7 +39,7 @@
             {% for subsection_path in root_section.subsections %}
             {% set subsection = get_section(path=subsection_path) %}
             <div class="toc__section">
-                <div class="toc__section-title">{{ subsection.title }}</div>
+                <a href="{{ subsection.permalink | safe }}" class="toc__section-title {% if current_path is defined and current_path == subsection.path %}active{% endif %}">{{ subsection.title }}</a>
                 <ul class="toc__list">
                     {% for pg in subsection.pages %}
                     <li class="toc__item">
