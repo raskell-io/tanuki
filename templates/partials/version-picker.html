@@ -19,7 +19,7 @@
         {% for v in config.extra.versions.list %}
         <a href="{{ v.url | safe }}" class="version-picker__item {% if v.version == current_version %}active{% endif %}" role="option">
             v{{ v.version }}
-            {% if v.label is defined %}
+            {% if v.label is defined and v.label %}
             <span class="version-picker__badge">{{ v.label }}</span>
             {% endif %}
         </a>

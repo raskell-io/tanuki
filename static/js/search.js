@@ -71,8 +71,17 @@
 
   function openSearch() {
     searchOverlay.classList.add('open');
-    searchInput.focus();
     document.body.style.overflow = 'hidden';
+    // Focus after transition completes
+    const onTransitionEnd = () => {
+      searchInput.focus();
+      searchOverlay.removeEventListener('transitionend', onTransitionEnd);
+    };
+    searchOverlay.addEventListener('transitionend', onTransitionEnd);
+    // Fallback in case transitionend doesn't fire
+    setTimeout(() => {
+      searchInput.focus();
+    }, 350);
   }
 
   function closeSearch() {

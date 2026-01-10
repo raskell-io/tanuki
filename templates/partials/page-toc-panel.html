@@ -1,0 +1,43 @@
+{# Right sidebar for "On this page" headings - docs mode (supports both pages and sections) #}
+{% set toc_items = page.toc | default(value=[]) %}
+{% if not toc_items and section %}
+    {% set toc_items = section.toc | default(value=[]) %}
+{% endif %}
+
+{% if toc_items %}
+<aside id="page-toc-panel" class="page-toc-panel" aria-hidden="true" aria-label="On this page">
+    <div class="page-toc-panel__content">
+        <div class="page-toc-panel__header">
+            <span class="page-toc-panel__title">On this page</span>
+            <button class="page-toc-panel__close" type="button" aria-label="Close table of contents">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <nav class="page-toc-panel__nav" aria-label="Page sections">
+            <ul class="page-toc-panel__list">
+                {% for item in toc_items %}
+                <li class="page-toc-panel__item">
+                    <a href="#{{ item.id }}" class="page-toc-panel__link">
+                        {{ item.title }}
+                    </a>
+                    {% if item.children %}
+                    <ul class="page-toc-panel__list page-toc-panel__list--nested">
+                        {% for child in item.children %}
+                        <li class="page-toc-panel__item">
+                            <a href="#{{ child.id }}" class="page-toc-panel__link">
+                                {{ child.title }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+</aside>
+{% endif %}

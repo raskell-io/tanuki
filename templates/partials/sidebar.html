@@ -53,33 +53,6 @@
             {% endfor %}
             {% endif %}
             {% endif %}
-
-            {# On this page - headings from current page #}
-            {% if page and page.toc %}
-            <div class="toc__section">
-                <div class="toc__section-title">On this page</div>
-                <ul class="toc__list">
-                    {% for item in page.toc %}
-                    <li class="toc__item">
-                        <a href="#{{ item.id }}" class="toc__link">
-                            {{ item.title }}
-                        </a>
-                        {% if item.children %}
-                        <ul class="toc__list toc__list--nested">
-                            {% for child in item.children %}
-                            <li class="toc__item">
-                                <a href="#{{ child.id }}" class="toc__link">
-                                    {{ child.title }}
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
         </div>
     </nav>
 

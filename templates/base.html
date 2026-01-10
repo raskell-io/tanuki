@@ -305,11 +305,26 @@
             {% include "partials/header.html" %}
             {% endblock %}
 
+            {# Scroll Progress Indicator - docs mode only #}
+            {% if mode == "docs" %}
+            <div class="scroll-progress" aria-hidden="true">
+                <div class="scroll-progress__bar"></div>
+                <span class="scroll-progress__percent">0%</span>
+            </div>
+            {% endif %}
+
             {% block nav_buttons %}{% endblock %}
 
-            <main id="main-content" class="main-content" role="main" aria-label="Main content">
-                {% block content %}{% endblock %}
-            </main>
+            <div class="layout__content-area">
+                <main id="main-content" class="main-content" role="main" aria-label="Main content">
+                    {% block content %}{% endblock %}
+                </main>
+
+                {# Page ToC panel for docs mode - right sidebar #}
+                {% if mode == "docs" %}
+                {% include "partials/page-toc-panel.html" %}
+                {% endif %}
+            </div>
 
             {% block footer %}
             {% if mode != "docs" and mode != "book" and mode != "product" %}
@@ -335,6 +350,25 @@
     {# Nav overlay for mobile menu - only for product mode (site/blog has it in header, docs/book use sidebar) #}
     {% if mode == "product" %}
     {% include "partials/nav-overlay.html" %}
+    {% endif %}
+
+    {# Page ToC toggle button - docs mode only, fixed position #}
+    {% set has_toc = (page and page.toc) or (section and section.toc) %}
+    {% if mode == "docs" and has_toc %}
+    <button class="page-toc-toggle" type="button" aria-label="Toggle table of contents" aria-expanded="false" aria-controls="page-toc-panel" title="On this page">
+        <svg class="page-toc-toggle__icon page-toc-toggle__icon--list" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M16 5H3"/>
+            <path d="M16 12H3"/>
+            <path d="M16 19H3"/>
+            <path d="M21 5h.01"/>
+            <path d="M21 12h.01"/>
+            <path d="M21 19h.01"/>
+        </svg>
+        <svg class="page-toc-toggle__icon page-toc-toggle__icon--close" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6 6 18"/>
+            <path d="m6 6 12 12"/>
+        </svg>
+    </button>
     {% endif %}
 
     {# Scroll to top button (not for book mode) #}

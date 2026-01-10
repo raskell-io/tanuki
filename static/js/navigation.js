@@ -568,6 +568,157 @@
   }
 
   // =============================================================================
+  // Page ToC Panel (Docs Mode - Right Sidebar)
+  // =============================================================================
+
+  function initPageTocPanel() {
+    const panel = document.getElementById('page-toc-panel');
+    const toggleBtn = document.querySelector('.page-toc-toggle');
+    const closeBtn = document.querySelector('.page-toc-panel__close');
+
+    if (!panel || !toggleBtn) return;
+
+    const STORAGE_KEY = 'page-toc-open';
+
+    function openPanel() {
+      panel.setAttribute('aria-hidden', 'false');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      localStorage.setItem(STORAGE_KEY, 'true');
+    }
+
+    function closePanel() {
+      panel.setAttribute('aria-hidden', 'true');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      localStorage.setItem(STORAGE_KEY, 'false');
+    }
+
+    function togglePanel() {
+      const isHidden = panel.getAttribute('aria-hidden') === 'true';
+      if (isHidden) {
+        openPanel();
+      } else {
+        closePanel();
+      }
+    }
+
+    // Restore state from localStorage (default to open on desktop)
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    const isDesktop = window.innerWidth >= 1024;
+
+    if (savedState === 'true' || (savedState === null && isDesktop)) {
+      openPanel();
+    }
+
+    toggleBtn.addEventListener('click', togglePanel);
+    if (closeBtn) closeBtn.addEventListener('click', closePanel);
+
+    // Sync active state with scroll
+    initPanelActiveTocHighlight();
+  }
+
+  function initPanelActiveTocHighlight() {
+    const panelLinks = document.querySelectorAll('.page-toc-panel__link');
+
+    if (!panelLinks.length) return;
+
+    // Build array of headings that have corresponding panel links
+    const trackedHeadings = [];
+    panelLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const id = href.slice(1);
+        const heading = document.getElementById(id);
+        if (heading) {
+          trackedHeadings.push({ id, element: heading, link });
+        }
+      }
+    });
+
+    if (!trackedHeadings.length) return;
+
+    let currentActiveId = trackedHeadings[0].id;
+
+    function updateActiveLink() {
+      const scrollTop = window.scrollY + 120;
+      let newActiveId = trackedHeadings[0].id;
+
+      for (let i = trackedHeadings.length - 1; i >= 0; i--) {
+        if (trackedHeadings[i].element.offsetTop <= scrollTop) {
+          newActiveId = trackedHeadings[i].id;
+          break;
+        }
+      }
+
+      if (newActiveId !== currentActiveId) {
+        currentActiveId = newActiveId;
+        trackedHeadings.forEach(({ id, link }) => {
+          link.classList.toggle('active', id === currentActiveId);
+        });
+      }
+    }
+
+    window.addEventListener('scroll', updateActiveLink, { passive: true });
+    updateActiveLink();
+  }
+
+  // =============================================================================
+  // Scroll Progress Indicator
+  // =============================================================================
+
+  function initScrollProgress() {
+    const progressContainer = document.querySelector('.scroll-progress');
+    const progressBar = document.querySelector('.scroll-progress__bar');
+    const progressPercent = document.querySelector('.scroll-progress__percent');
+
+    if (!progressContainer || !progressBar) return;
+
+    function updateProgress() {
+      // Calculate scroll progress
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+      // Avoid division by zero for short pages
+      if (docHeight <= 0) {
+        progressBar.style.width = '100%';
+        if (progressPercent) {
+          progressPercent.textContent = '100%';
+          progressPercent.style.left = '100%';
+        }
+        return;
+      }
+
+      const scrollPercent = Math.min(100, Math.round((scrollTop / docHeight) * 100));
+
+      // Update bar width
+      progressBar.style.width = `${scrollPercent}%`;
+
+      // Update percentage text and position it at the end of the bar
+      if (progressPercent) {
+        progressPercent.textContent = `${scrollPercent}%`;
+        progressPercent.style.left = `${scrollPercent}%`;
+      }
+
+      // Toggle active class for showing percentage (only after some scroll)
+      progressContainer.classList.toggle('scroll-progress--active', scrollTop > 50);
+    }
+
+    // Throttled scroll handler for performance
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          updateProgress();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Initial update
+    updateProgress();
+  }
+
+  // =============================================================================
   // Initialize
   // =============================================================================
 
@@ -582,6 +733,8 @@
     initScrollToTop();
     initActiveTocHighlight();
     initAnchorCopy();
+    initPageTocPanel();
+    initScrollProgress();
   }
 
   if (document.readyState === 'loading') {
