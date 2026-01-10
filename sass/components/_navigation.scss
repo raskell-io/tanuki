@@ -733,6 +733,26 @@
     color: var(--color-accent);
     background: rgba(203, 166, 247, 0.1);
   }
+
+  &--link {
+    gap: 0.5rem;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+
+    svg {
+      opacity: 0.6;
+    }
+
+    &:hover svg {
+      opacity: 1;
+    }
+  }
+}
+
+.version-picker__divider {
+  margin: 0.25rem 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
 }
 
 // -----------------------------------------------------------------------------
