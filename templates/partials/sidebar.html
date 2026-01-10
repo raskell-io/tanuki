@@ -34,10 +34,27 @@
                 </ol>
             </div>
 
-            {# Subsections #}
+            {# Subsections - collect and sort by weight #}
             {% if root_section.subsections %}
+            {% set_global subsection_data = [] %}
             {% for subsection_path in root_section.subsections %}
-            {% set subsection = get_section(path=subsection_path) %}
+                {% set sec = get_section(path=subsection_path) %}
+                {% set w = sec.weight | default(value=999) %}
+                {# Pad weight to 3 digits for proper string sorting, then concat with path #}
+                {% if w < 10 %}
+                    {% set w_str = "00" ~ w %}
+                {% elif w < 100 %}
+                    {% set w_str = "0" ~ w %}
+                {% else %}
+                    {% set w_str = w %}
+                {% endif %}
+                {% set_global subsection_data = subsection_data | concat(with=[w_str ~ "|" ~ subsection_path]) %}
+            {% endfor %}
+            {% set_global subsection_data = subsection_data | sort %}
+
+            {% for item in subsection_data %}
+            {% set parts = item | split(pat="|") %}
+            {% set subsection = get_section(path=parts.1) %}
             <div class="toc__section">
                 <a href="{{ subsection.permalink | safe }}" class="toc__section-title {% if current_path is defined and current_path == subsection.path %}active{% endif %}">{{ subsection.title }}</a>
                 <ul class="toc__list">
