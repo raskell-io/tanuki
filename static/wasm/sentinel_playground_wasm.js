@@ -178,6 +178,55 @@ export function simulate(config_kdl, request_json) {
 }
 
 /**
+ * Simulate a sequence of requests with stateful policy tracking
+ *
+ * This enables simulation of multiple requests with state tracking for:
+ * - Rate limiting (token bucket per route)
+ * - Caching (entries with TTL)
+ * - Circuit breakers (per upstream)
+ * - Load balancer position (round-robin)
+ *
+ * Takes:
+ * - `config_kdl`: KDL configuration string
+ * - `requests_json`: JSON array of timestamped requests
+ *
+ * Request JSON format:
+ * ```json
+ * [
+ *     {
+ *         "method": "GET",
+ *         "host": "example.com",
+ *         "path": "/api/users",
+ *         "timestamp": 0.0
+ *     },
+ *     {
+ *         "method": "GET",
+ *         "host": "example.com",
+ *         "path": "/api/users",
+ *         "timestamp": 0.1
+ *     }
+ * ]
+ * ```
+ *
+ * Returns a JSON object with:
+ * - `results`: Array of per-request results
+ * - `state_transitions`: Array of state changes that occurred
+ * - `final_state`: Final state of all policy components
+ * - `summary`: Summary statistics (hit rates, rate limited count, etc.)
+ * @param {string} config_kdl
+ * @param {string} requests_json
+ * @returns {any}
+ */
+export function simulate_stateful(config_kdl, requests_json) {
+    const ptr0 = passStringToWasm0(config_kdl, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(requests_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.simulate_stateful(ptr0, len0, ptr1, len1);
+    return ret;
+}
+
+/**
  * Validate a KDL configuration string
  *
  * Returns a JSON object with the following structure:
