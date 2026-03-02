@@ -112,11 +112,77 @@
     return languageNames[lower] || lang.toUpperCase();
   }
 
-  function isKDLBlock(pre, code) {
+  function getCodeLang(code) {
+    // Check language-* class first (standard markdown output)
     const langClass = Array.from(code.classList).find(c => c.startsWith('language-'));
-    if (!langClass) return false;
-    const lang = langClass.replace('language-', '').toLowerCase();
-    return lang === 'kdl';
+    if (langClass) return langClass.replace('language-', '').toLowerCase();
+    // Fall back to data-lang attribute (Zola class-based highlighting)
+    const dataLang = code.getAttribute('data-lang');
+    if (dataLang) return dataLang.toLowerCase();
+    return null;
+  }
+
+  function isKDLBlock(pre, code) {
+    return getCodeLang(code) === 'kdl';
+  }
+
+  // Detect whether a KDL block is a complete config (has required top-level sections)
+  // vs a partial snippet (e.g., just a route or matches block)
+  function isCompleteConfig(config) {
+    return /(?:^|\n)\s*system\s*\{/m.test(config) && /(?:^|\n)\s*listeners\s*\{/m.test(config);
+  }
+
+  // Normalize current config syntax to match the WASM validator (v0.2.4)
+  function preprocessConfig(config) {
+    let result = config;
+
+    // Rename cert-path → cert-file, key-path → key-file
+    result = result.replace(/\bcert-path\b/g, 'cert-file');
+    result = result.replace(/\bkey-path\b/g, 'key-file');
+
+    // Rename socket "/path" → unix-socket "/path" (agent transport shorthand)
+    result = result.replace(/\bsocket\s+"(\/[^"]*)"/g, 'unix-socket "$1"');
+
+    // Flatten target { address "addr" [weight N] } → target "addr" [weight=N]
+    result = result.replace(
+      /target\s*\{[^}]*?address\s+"([^"]+)"([^}]*)\}/g,
+      function(match, addr, rest) {
+        var w = rest.match(/weight\s+(\d+)/);
+        return w ? 'target "' + addr + '" weight=' + w[1] : 'target "' + addr + '"';
+      }
+    );
+
+    // Remove targets { } wrapper (preserve child lines)
+    var lines = result.split('\n');
+    var output = [];
+    var inWrapper = false;
+    var depth = 0;
+
+    for (var i = 0; i < lines.length; i++) {
+      var t = lines[i].trim();
+
+      if (!inWrapper && /^targets\s*\{$/.test(t)) {
+        inWrapper = true;
+        depth = 1;
+        continue;
+      }
+
+      if (inWrapper) {
+        for (var j = 0; j < t.length; j++) {
+          if (t[j] === '{') depth++;
+          else if (t[j] === '}') depth--;
+        }
+        if (depth <= 0) {
+          inWrapper = false;
+          if (t === '}') continue;
+        }
+        output.push(lines[i]);
+      } else {
+        output.push(lines[i]);
+      }
+    }
+
+    return output.join('\n');
   }
 
   // Pages where KDL validation should be skipped (partial snippets only)
@@ -153,7 +219,7 @@
 
   async function validateKDL(config) {
     const wasm = await loadWASM();
-    return wasm.validate(config);
+    return wasm.validate(preprocessConfig(config));
   }
 
   function encodeConfigForURL(config) {
@@ -244,8 +310,13 @@
     }
   }
 
-  async function handleValidation(pre, code, validateBtn, playgroundLink) {
+  async function handleValidation(pre, code, validateBtn, playgroundLink, autoTriggered) {
     const config = code.textContent;
+
+    // Skip auto-validation for partial snippets (missing system/listeners blocks)
+    if (autoTriggered && !isCompleteConfig(config)) {
+      return;
+    }
 
     setValidationState(validateBtn, 'loading');
 
@@ -264,7 +335,7 @@
         const errorMsg = result.errors && result.errors[0]
           ? result.errors[0].message.split('\n')[0].substring(0, 30)
           : 'Invalid';
-        setValidationState(validateBtn, 'invalid', 'Error');
+        setValidationState(validateBtn, 'invalid', errorMsg);
         playgroundLink.style.display = 'none';
       }
     } catch (e) {
@@ -284,10 +355,9 @@
       // Make pre relative for absolute positioning
       pre.style.position = 'relative';
 
-      // Get language from class (e.g., "language-javascript")
-      const langClass = Array.from(code.classList).find(c => c.startsWith('language-'));
-      if (langClass) {
-        const lang = langClass.replace('language-', '');
+      // Get language from class or data-lang attribute
+      const lang = getCodeLang(code);
+      if (lang && !pre.hasAttribute('data-lang')) {
         pre.setAttribute('data-lang', getLanguageName(lang) || lang);
       }
 
@@ -317,9 +387,9 @@
         playgroundLink.style.display = 'none';
         buttonContainer.appendChild(playgroundLink);
 
-        // Handle validate button click
+        // Handle validate button click (manual = always validate)
         validateBtn.addEventListener('click', async () => {
-          await handleValidation(pre, code, validateBtn, playgroundLink);
+          await handleValidation(pre, code, validateBtn, playgroundLink, false);
         });
 
         // Handle edit button click
@@ -333,8 +403,8 @@
             editBtn.innerHTML = `${icons.edit}<span>Edit</span>`;
             pre.classList.remove('editing');
 
-            // Re-validate after editing
-            handleValidation(pre, code, validateBtn, playgroundLink);
+            // Re-validate after editing (manual action)
+            handleValidation(pre, code, validateBtn, playgroundLink, false);
           } else {
             // Enter edit mode
             code.contentEditable = 'true';
@@ -349,11 +419,11 @@
           }
         });
 
-        // Auto-validate on first view (lazy load)
+        // Auto-validate on first view (lazy load, complete configs only)
         const observer = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
-              handleValidation(pre, code, validateBtn, playgroundLink);
+              handleValidation(pre, code, validateBtn, playgroundLink, true);
               observer.disconnect();
             }
           });
