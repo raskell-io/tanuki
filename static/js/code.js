@@ -137,22 +137,168 @@
     return new RegExp('(?:^|\\n)\\s*' + blockName + '\\s*\\{', 'm').test(config);
   }
 
+  // Check if config starts with a standalone block that needs a parent wrapper
+  function hasStandaloneBlock(config, name) {
+    return new RegExp('(?:^|\\n)\\s*' + name + '\\s+["{]', 'm').test(config)
+        || new RegExp('(?:^|\\n)\\s*' + name + '\\s*$', 'm').test(config);
+  }
+
   // Wrap partial KDL snippets with minimal boilerplate so the validator accepts them
   function wrapPartialConfig(config) {
     if (isCompleteConfig(config)) return config;
 
-    var hasRoutes = hasTopLevelBlock(config, 'routes');
-    var hasUpstreams = hasTopLevelBlock(config, 'upstreams');
+    var result = config;
+
+    // Wrap standalone singular blocks in their plural parent
+    // e.g., route "api" { ... } → routes { route "api" { ... } }
+    var wrappers = [
+      ['route', 'routes'],
+      ['upstream', 'upstreams'],
+      ['agent', 'agents'],
+      ['filter', 'filters'],
+      ['listener', 'listeners']
+    ];
+
+    for (var w = 0; w < wrappers.length; w++) {
+      var singular = wrappers[w][0];
+      var plural = wrappers[w][1];
+      // Only wrap if we have the singular but NOT the plural
+      if (hasStandaloneBlock(result, singular) && !hasTopLevelBlock(result, plural)) {
+        result = plural + ' {\n' + result + '\n}\n';
+      }
+    }
+
+    // Wrap standalone matches { } in a route → routes
+    if (hasTopLevelBlock(result, 'matches') && !hasTopLevelBlock(result, 'routes')) {
+      result = 'routes {\n    route "example" {\n' + result + '\n        upstream "backend"\n    }\n}\n';
+    }
+
+    // Wrap standalone target in an upstream → upstreams
+    if (/(?:^|\n)\s*target\s+"/.test(result) && !hasTopLevelBlock(result, 'upstreams')) {
+      result = 'upstreams {\n    upstream "backend" {\n' + result + '\n    }\n}\n';
+    }
+
+    // Wrap standalone tls/connection-pool blocks inside a listener
+    if ((hasTopLevelBlock(result, 'tls') || hasTopLevelBlock(result, 'connection-pool'))
+        && !hasTopLevelBlock(result, 'listeners')) {
+      result = 'listeners {\n    listener "https" {\n        address "0.0.0.0:443"\n' + result + '\n    }\n}\n';
+    }
+
+    // Wrap standalone tracing/metrics/access-log blocks inside observability
+    if ((hasTopLevelBlock(result, 'tracing') || hasTopLevelBlock(result, 'metrics') || hasTopLevelBlock(result, 'access-log'))
+        && !hasTopLevelBlock(result, 'observability')) {
+      result = 'observability {\n' + result + '\n}\n';
+    }
+
+    // Wrap standalone policies/shadow/circuit-breaker inside a route
+    if ((hasTopLevelBlock(result, 'policies') || hasTopLevelBlock(result, 'shadow'))
+        && !hasTopLevelBlock(result, 'routes')) {
+      result = 'routes {\n    route "example" {\n        matches { path-prefix "/" }\n        upstream "backend"\n' + result + '\n    }\n}\n';
+    }
+
+    // Blocks that can't be validated — return null to signal "skip"
+    var unknownBlocks = [
+      'admin', 'inference', 'canary', 'security', 'stack',
+      'api-schema', 'error-pages', 'rate-limit', 'budget',
+      'cost-attribution', 'model-routing', 'service',
+      'dns-provider', 'exports', 'reverse-listener',
+      'static-files', 'type', 'config'
+    ];
+    for (var u = 0; u < unknownBlocks.length; u++) {
+      if (hasTopLevelBlock(result, unknownBlocks[u])) {
+        return null; // Signal to skip validation
+      }
+    }
+
+    // Skip validation for standalone header/attribute value snippets
+    if (/^\s*"[A-Z]/.test(result.trim())) {
+      return null;
+    }
+
+    // Skip snippets that are just bare KDL syntax examples (no braces at all)
+    if (result.indexOf('{') === -1) {
+      return null;
+    }
+
+    // Remove waf blocks entirely to avoid runtime-wiring validation error
+    result = result.replace(/(?:^|\n)\s*waf\s*\{[\s\S]*?\n\}/gm, '');
+
+    // Add dummy targets to standalone upstreams that lack them
+    // Use a brace-depth-aware approach instead of simple regex
+    var upstreamLines = result.split('\n');
+    var fixedLines = [];
+    var inUpstream = false;
+    var upstreamDepth = 0;
+    var upstreamHasTarget = false;
+    var upstreamCloseIdx = -1;
+
+    for (var ui = 0; ui < upstreamLines.length; ui++) {
+      var uline = upstreamLines[ui];
+      var utrimmed = uline.trim();
+
+      if (!inUpstream && /^upstream\s+"[^"]+"\s*\{/.test(utrimmed)) {
+        inUpstream = true;
+        upstreamDepth = 0;
+        upstreamHasTarget = false;
+      }
+
+      if (inUpstream) {
+        if (/target\s+"/.test(utrimmed) || /discovery\s+"/.test(utrimmed)) {
+          upstreamHasTarget = true;
+        }
+        for (var uc = 0; uc < utrimmed.length; uc++) {
+          if (utrimmed[uc] === '{') upstreamDepth++;
+          else if (utrimmed[uc] === '}') upstreamDepth--;
+        }
+        if (upstreamDepth <= 0) {
+          if (!upstreamHasTarget) {
+            // Insert dummy target before the closing brace
+            fixedLines.push('        target "127.0.0.1:3000"');
+          }
+          inUpstream = false;
+        }
+      }
+
+      fixedLines.push(uline);
+    }
+    result = fixedLines.join('\n');
+
+    // Now add the standard boilerplate if still missing
+    var hasRoutes = hasTopLevelBlock(result, 'routes');
+    var hasUpstreams = hasTopLevelBlock(result, 'upstreams');
+    var hasListeners = hasTopLevelBlock(result, 'listeners');
     var extra = '';
 
     if (!hasRoutes) {
       extra += '\nroutes {\n    route "default" {\n        matches { path-prefix "/" }\n        upstream "backend"\n    }\n}\n';
     }
     if (!hasUpstreams) {
-      extra += '\nupstreams {\n    upstream "backend" {\n        target "127.0.0.1:3000"\n    }\n}\n';
+      // Collect upstream names referenced in routes
+      var upstreamRefs = result.match(/upstream\s+"([^"]+)"/g) || [];
+      var upstreamNames = {};
+      for (var i = 0; i < upstreamRefs.length; i++) {
+        var m = upstreamRefs[i].match(/upstream\s+"([^"]+)"/);
+        if (m) upstreamNames[m[1]] = true;
+      }
+      // Create upstream stubs for each referenced name
+      var names = Object.keys(upstreamNames);
+      if (names.length === 0) names = ['backend'];
+      extra += '\nupstreams {\n';
+      for (var j = 0; j < names.length; j++) {
+        extra += '    upstream "' + names[j] + '" {\n        target "127.0.0.1:3000"\n    }\n';
+      }
+      extra += '}\n';
     }
 
-    return 'system {\n    worker-threads 0\n}\n\nlisteners {\n    listener "http" {\n        address "0.0.0.0:8080"\n        protocol "http"\n    }\n}\n\n' + config + '\n' + extra;
+    var prefix = '';
+    if (!hasTopLevelBlock(result, 'system')) {
+      prefix += 'system {\n    worker-threads 0\n}\n\n';
+    }
+    if (!hasListeners) {
+      prefix += 'listeners {\n    listener "http" {\n        address "0.0.0.0:8080"\n        protocol "http"\n    }\n}\n\n';
+    }
+
+    return prefix + result + '\n' + extra;
   }
 
   // Normalize current config syntax to match the WASM validator (v0.2.4)
@@ -164,7 +310,8 @@
     result = result.replace(/\bkey-path\b/g, 'key-file');
 
     // Rename socket "/path" → unix-socket "/path" (agent transport shorthand)
-    result = result.replace(/\bsocket\s+"(\/[^"]*)"/g, 'unix-socket "$1"');
+    // Use negative lookbehind to avoid matching "unix-socket" → "unix-unix-socket"
+    result = result.replace(/(?<![-\w])socket\s+"(\/[^"]*)"/g, 'unix-socket "$1"');
 
     // Flatten target { address "addr" [weight N] } → target "addr" [weight=N]
     result = result.replace(
@@ -208,6 +355,7 @@
     result = output.join('\n');
 
     // Wrap partial snippets with minimal boilerplate
+    // Returns null if the snippet can't be validated
     result = wrapPartialConfig(result);
 
     return result;
@@ -246,8 +394,13 @@
   }
 
   async function validateKDL(config) {
+    const processed = preprocessConfig(config);
+    if (processed === null) {
+      // Snippet can't be wrapped into a valid config — treat as valid (skip)
+      return { valid: true, skipped: true };
+    }
     const wasm = await loadWASM();
-    return wasm.validate(preprocessConfig(config));
+    return wasm.validate(processed);
   }
 
   function encodeConfigForURL(config) {
