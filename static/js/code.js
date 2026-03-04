@@ -132,6 +132,29 @@
     return /(?:^|\n)\s*system\s*\{/m.test(config) && /(?:^|\n)\s*listeners\s*\{/m.test(config);
   }
 
+  // Check if a config has a specific top-level block
+  function hasTopLevelBlock(config, blockName) {
+    return new RegExp('(?:^|\\n)\\s*' + blockName + '\\s*\\{', 'm').test(config);
+  }
+
+  // Wrap partial KDL snippets with minimal boilerplate so the validator accepts them
+  function wrapPartialConfig(config) {
+    if (isCompleteConfig(config)) return config;
+
+    var hasRoutes = hasTopLevelBlock(config, 'routes');
+    var hasUpstreams = hasTopLevelBlock(config, 'upstreams');
+    var extra = '';
+
+    if (!hasRoutes) {
+      extra += '\nroutes {\n    route "default" {\n        matches { path-prefix "/" }\n        upstream "backend"\n    }\n}\n';
+    }
+    if (!hasUpstreams) {
+      extra += '\nupstreams {\n    upstream "backend" {\n        target "127.0.0.1:3000"\n    }\n}\n';
+    }
+
+    return 'system {\n    worker-threads 0\n}\n\nlisteners {\n    listener "http" {\n        address "0.0.0.0:8080"\n        protocol "http"\n    }\n}\n\n' + config + '\n' + extra;
+  }
+
   // Normalize current config syntax to match the WASM validator (v0.2.4)
   function preprocessConfig(config) {
     let result = config;
@@ -182,7 +205,12 @@
       }
     }
 
-    return output.join('\n');
+    result = output.join('\n');
+
+    // Wrap partial snippets with minimal boilerplate
+    result = wrapPartialConfig(result);
+
+    return result;
   }
 
   // Pages where KDL validation should be skipped (partial snippets only)
@@ -313,8 +341,8 @@
   async function handleValidation(pre, code, validateBtn, playgroundLink, autoTriggered) {
     const config = code.textContent;
 
-    // Skip auto-validation for partial snippets (missing system/listeners blocks)
-    if (autoTriggered && !isCompleteConfig(config)) {
+    // Skip auto-validation on directive reference pages (intentionally partial)
+    if (autoTriggered && shouldSkipValidation()) {
       return;
     }
 
