@@ -143,6 +143,57 @@
         || new RegExp('(?:^|\\n)\\s*' + name + '\\s*$', 'm').test(config);
   }
 
+  // Collect all upstream names defined inside an upstreams { } block
+  function getDefinedUpstreamNames(config) {
+    var names = {};
+    var m = config.match(/upstreams\s*\{([\s\S]*)/);
+    if (!m) return names;
+    var body = m[1];
+    var depth = 1;
+    var end = 0;
+    for (var i = 0; i < body.length; i++) {
+      if (body[i] === '{') depth++;
+      else if (body[i] === '}') { depth--; if (depth <= 0) { end = i; break; } }
+    }
+    body = body.substring(0, end);
+    var re = /upstream\s+"([^"]+)"/g;
+    var match;
+    while ((match = re.exec(body)) !== null) {
+      names[match[1]] = true;
+    }
+    return names;
+  }
+
+  // Collect all upstream names referenced in route blocks (upstream "name" as child of route)
+  function getReferencedUpstreamNames(config) {
+    var names = {};
+    // Match upstream "name" that appears inside routes (not inside upstreams block definitions)
+    var routesMatch = config.match(/routes\s*\{([\s\S]*)/);
+    if (!routesMatch) {
+      // Also check for top-level upstream references
+      var refs = config.match(/upstream\s+"([^"]+)"/g) || [];
+      for (var i = 0; i < refs.length; i++) {
+        var rm = refs[i].match(/upstream\s+"([^"]+)"/);
+        if (rm) names[rm[1]] = true;
+      }
+      return names;
+    }
+    var body = routesMatch[1];
+    var depth = 1;
+    var end = 0;
+    for (var i = 0; i < body.length; i++) {
+      if (body[i] === '{') depth++;
+      else if (body[i] === '}') { depth--; if (depth <= 0) { end = i; break; } }
+    }
+    body = body.substring(0, end);
+    var re = /upstream\s+"([^"]+)"/g;
+    var match;
+    while ((match = re.exec(body)) !== null) {
+      names[match[1]] = true;
+    }
+    return names;
+  }
+
   // Wrap partial KDL snippets with minimal boilerplate so the validator accepts them
   function wrapPartialConfig(config) {
     if (isCompleteConfig(config)) return config;
@@ -202,7 +253,13 @@
       'api-schema', 'error-pages', 'rate-limit', 'budget',
       'cost-attribution', 'model-routing', 'service',
       'dns-provider', 'exports', 'reverse-listener',
-      'static-files', 'type', 'config'
+      'static-files', 'type', 'config', 'namespaces',
+      'retry-policy', 'health-check', 'circuit-breaker',
+      'timeouts', 'http-version', 'logging', 'transport',
+      'ruleset', 'prompt-injection', 'pii-detection',
+      'fallback', 'fallback-upstream', 'response-headers',
+      'pages', 'model', 'limits', 'request-headers',
+      'geo'
     ];
     for (var u = 0; u < unknownBlocks.length; u++) {
       if (hasTopLevelBlock(result, unknownBlocks[u])) {
@@ -223,14 +280,12 @@
     // Remove waf blocks entirely to avoid runtime-wiring validation error
     result = result.replace(/(?:^|\n)\s*waf\s*\{[\s\S]*?\n\}/gm, '');
 
-    // Add dummy targets to standalone upstreams that lack them
-    // Use a brace-depth-aware approach instead of simple regex
+    // Add dummy targets to upstreams that lack them (brace-depth-aware)
     var upstreamLines = result.split('\n');
     var fixedLines = [];
     var inUpstream = false;
     var upstreamDepth = 0;
     var upstreamHasTarget = false;
-    var upstreamCloseIdx = -1;
 
     for (var ui = 0; ui < upstreamLines.length; ui++) {
       var uline = upstreamLines[ui];
@@ -243,7 +298,7 @@
       }
 
       if (inUpstream) {
-        if (/target\s+"/.test(utrimmed) || /discovery\s+"/.test(utrimmed)) {
+        if (/target\s+"/.test(utrimmed)) {
           upstreamHasTarget = true;
         }
         for (var uc = 0; uc < utrimmed.length; uc++) {
@@ -252,7 +307,6 @@
         }
         if (upstreamDepth <= 0) {
           if (!upstreamHasTarget) {
-            // Insert dummy target before the closing brace
             fixedLines.push('        target "127.0.0.1:3000"');
           }
           inUpstream = false;
@@ -263,31 +317,276 @@
     }
     result = fixedLines.join('\n');
 
+    // Add dummy transport to agents that lack one (brace-depth-aware)
+    var agentLines = result.split('\n');
+    var agentFixed = [];
+    var inAgent = false;
+    var agentDepth = 0;
+    var agentHasTransport = false;
+
+    for (var ai = 0; ai < agentLines.length; ai++) {
+      var aline = agentLines[ai];
+      var atrimmed = aline.trim();
+
+      if (!inAgent && /^agent\s+"[^"]+"\s/.test(atrimmed)) {
+        inAgent = true;
+        agentDepth = 0;
+        agentHasTransport = false;
+      }
+
+      if (inAgent) {
+        if (/unix-socket\s+"/.test(atrimmed) || /grpc\s+"/.test(atrimmed) || /http\s+"/.test(atrimmed) || /binary-uds\s+"/.test(atrimmed)) {
+          agentHasTransport = true;
+        }
+        for (var ac = 0; ac < atrimmed.length; ac++) {
+          if (atrimmed[ac] === '{') agentDepth++;
+          else if (atrimmed[ac] === '}') agentDepth--;
+        }
+        if (agentDepth <= 0) {
+          if (!agentHasTransport) {
+            agentFixed.push('        unix-socket "/tmp/zentinel-agent.sock"');
+          }
+          inAgent = false;
+        }
+      }
+
+      agentFixed.push(aline);
+    }
+    result = agentFixed.join('\n');
+
+    // Add dummy cert-file/key-file to TLS blocks that lack them (brace-depth-aware)
+    var tlsLines = result.split('\n');
+    var tlsFixed = [];
+    var inTls = false;
+    var tlsDepth = 0;
+    var tlsHasCert = false;
+    var tlsHasAcme = false;
+
+    for (var ti = 0; ti < tlsLines.length; ti++) {
+      var tline = tlsLines[ti];
+      var ttrimmed = tline.trim();
+
+      if (!inTls && /^tls\s*\{/.test(ttrimmed)) {
+        inTls = true;
+        tlsDepth = 0;
+        tlsHasCert = false;
+        tlsHasAcme = false;
+      }
+
+      if (inTls) {
+        if (/cert-file\s+"/.test(ttrimmed)) tlsHasCert = true;
+        if (/acme\s*\{/.test(ttrimmed)) tlsHasAcme = true;
+        for (var tc = 0; tc < ttrimmed.length; tc++) {
+          if (ttrimmed[tc] === '{') tlsDepth++;
+          else if (ttrimmed[tc] === '}') tlsDepth--;
+        }
+        if (tlsDepth <= 0) {
+          if (!tlsHasCert && !tlsHasAcme) {
+            tlsFixed.push('            cert-file "/etc/zentinel/tls/cert.pem"');
+            tlsFixed.push('            key-file "/etc/zentinel/tls/key.pem"');
+          }
+          inTls = false;
+        }
+      }
+
+      tlsFixed.push(tline);
+    }
+    result = tlsFixed.join('\n');
+
+    // Add backend stub to tracing blocks that lack one (brace-depth-aware)
+    var tracingLines = result.split('\n');
+    var tracingFixed = [];
+    var inTracing = false;
+    var tracingDepth = 0;
+    var tracingHasBackend = false;
+
+    for (var tri = 0; tri < tracingLines.length; tri++) {
+      var trline = tracingLines[tri];
+      var trtrimmed = trline.trim();
+
+      if (!inTracing && /^tracing\s*\{/.test(trtrimmed)) {
+        inTracing = true;
+        tracingDepth = 0;
+        tracingHasBackend = false;
+      }
+
+      if (inTracing) {
+        if (/backend\s*\{/.test(trtrimmed)) tracingHasBackend = true;
+        for (var trc = 0; trc < trtrimmed.length; trc++) {
+          if (trtrimmed[trc] === '{') tracingDepth++;
+          else if (trtrimmed[trc] === '}') tracingDepth--;
+        }
+        if (tracingDepth <= 0) {
+          if (!tracingHasBackend) {
+            tracingFixed.push('        backend "otlp" { endpoint "http://localhost:4318" }');
+          }
+          inTracing = false;
+        }
+      }
+
+      tracingFixed.push(trline);
+    }
+    result = tracingFixed.join('\n');
+
+    // Ensure routes have recognized match conditions (path-prefix, path, or host)
+    // The parser ignores method, header, query-param, path-regex so they don't count
+    // If matches block exists but only has unrecognized conditions, inject path-prefix into it
+    var routeLines = result.split('\n');
+    var routeFixed = [];
+    var inRoute = false;
+    var routeDepth = 0;
+    var routeHasValidMatch = false;
+    var routeHasMatchesBlock = false;
+    var routeMatchesLine = -1;
+    var routeHasUpstream = false;
+    var routeHasPriority = false;
+
+    for (var ri = 0; ri < routeLines.length; ri++) {
+      var rline = routeLines[ri];
+      var rtrimmed = rline.trim();
+
+      if (!inRoute && /^route\s+"[^"]+"\s/.test(rtrimmed)) {
+        inRoute = true;
+        routeDepth = 0;
+        routeHasValidMatch = false;
+        routeHasMatchesBlock = false;
+        routeMatchesLine = -1;
+        routeHasUpstream = false;
+        routeHasPriority = false;
+      }
+
+      if (inRoute) {
+        if (/path-prefix\s+"/.test(rtrimmed) || /(?:^|\s)path\s+"/.test(rtrimmed) || /host\s+"/.test(rtrimmed)) {
+          routeHasValidMatch = true;
+        }
+        if (/matches\s*\{/.test(rtrimmed) && routeMatchesLine === -1) {
+          routeHasMatchesBlock = true;
+          routeMatchesLine = routeFixed.length; // Will be inserted after this line
+        }
+        if (/upstream\s+"/.test(rtrimmed)) routeHasUpstream = true;
+        if (/priority\s+"?low"?/.test(rtrimmed)) routeHasPriority = true;
+        for (var rc = 0; rc < rtrimmed.length; rc++) {
+          if (rtrimmed[rc] === '{') routeDepth++;
+          else if (rtrimmed[rc] === '}') routeDepth--;
+        }
+        if (routeDepth <= 0) {
+          if (!routeHasValidMatch && !routeHasPriority) {
+            if (routeHasMatchesBlock && routeMatchesLine >= 0) {
+              // Inject path-prefix into the existing matches block (after the opening line)
+              routeFixed.splice(routeMatchesLine + 1, 0, '            path-prefix "/"');
+            } else {
+              // No matches block at all — add one
+              routeFixed.push('        matches { path-prefix "/" }');
+            }
+          }
+          if (!routeHasUpstream) {
+            routeFixed.push('        upstream "backend"');
+          }
+          inRoute = false;
+        }
+      }
+
+      routeFixed.push(rline);
+    }
+    result = routeFixed.join('\n');
+
+    // Ensure listeners have an address field
+    var listenerLines = result.split('\n');
+    var listenerFixed = [];
+    var inListener = false;
+    var listenerDepth = 0;
+    var listenerHasAddress = false;
+
+    for (var li = 0; li < listenerLines.length; li++) {
+      var lline = listenerLines[li];
+      var ltrimmed = lline.trim();
+
+      if (!inListener && /^listener\s+"[^"]+"\s*\{/.test(ltrimmed)) {
+        inListener = true;
+        listenerDepth = 0;
+        listenerHasAddress = false;
+      }
+
+      if (inListener) {
+        if (/address\s+"/.test(ltrimmed)) listenerHasAddress = true;
+        for (var lc = 0; lc < ltrimmed.length; lc++) {
+          if (ltrimmed[lc] === '{') listenerDepth++;
+          else if (ltrimmed[lc] === '}') listenerDepth--;
+        }
+        if (listenerDepth <= 0) {
+          if (!listenerHasAddress) {
+            listenerFixed.push('        address "0.0.0.0:8080"');
+          }
+          inListener = false;
+        }
+      }
+
+      listenerFixed.push(lline);
+    }
+    result = listenerFixed.join('\n');
+
     // Now add the standard boilerplate if still missing
     var hasRoutes = hasTopLevelBlock(result, 'routes');
     var hasUpstreams = hasTopLevelBlock(result, 'upstreams');
     var hasListeners = hasTopLevelBlock(result, 'listeners');
     var extra = '';
 
-    if (!hasRoutes) {
-      extra += '\nroutes {\n    route "default" {\n        matches { path-prefix "/" }\n        upstream "backend"\n    }\n}\n';
+    // Collect referenced upstream names and defined upstream names
+    var referencedUpstreams = getReferencedUpstreamNames(result);
+    var definedUpstreams = getDefinedUpstreamNames(result);
+
+    // Determine the default upstream name for the boilerplate route
+    var defaultUpstream = 'backend';
+    var defKeys = Object.keys(definedUpstreams);
+    if (defKeys.length > 0) {
+      defaultUpstream = defKeys[0];
     }
+
+    if (!hasRoutes) {
+      extra += '\nroutes {\n    route "default" {\n        matches { path-prefix "/" }\n        upstream "' + defaultUpstream + '"\n    }\n}\n';
+    }
+
     if (!hasUpstreams) {
-      // Collect upstream names referenced in routes
-      var upstreamRefs = result.match(/upstream\s+"([^"]+)"/g) || [];
-      var upstreamNames = {};
-      for (var i = 0; i < upstreamRefs.length; i++) {
-        var m = upstreamRefs[i].match(/upstream\s+"([^"]+)"/);
-        if (m) upstreamNames[m[1]] = true;
-      }
-      // Create upstream stubs for each referenced name
-      var names = Object.keys(upstreamNames);
-      if (names.length === 0) names = ['backend'];
+      // No upstreams block at all — create one with all referenced upstreams
+      var allRefs = Object.keys(referencedUpstreams);
+      if (allRefs.length === 0) allRefs = ['backend'];
       extra += '\nupstreams {\n';
-      for (var j = 0; j < names.length; j++) {
-        extra += '    upstream "' + names[j] + '" {\n        target "127.0.0.1:3000"\n    }\n';
+      for (var j = 0; j < allRefs.length; j++) {
+        extra += '    upstream "' + allRefs[j] + '" {\n        target "127.0.0.1:3000"\n    }\n';
       }
       extra += '}\n';
+    } else {
+      // Upstreams block exists — add missing referenced upstreams
+      var missingUpstreams = [];
+      for (var refName in referencedUpstreams) {
+        if (!definedUpstreams[refName]) {
+          missingUpstreams.push(refName);
+        }
+      }
+      if (missingUpstreams.length > 0) {
+        // Insert missing upstreams into the existing upstreams block
+        var insertStubs = '';
+        for (var mi = 0; mi < missingUpstreams.length; mi++) {
+          insertStubs += '\n    upstream "' + missingUpstreams[mi] + '" {\n        target "127.0.0.1:3000"\n    }';
+        }
+        // Find the last closing brace of the upstreams block and insert before it
+        var upstreamsEnd = result.lastIndexOf('}');
+        // More precise: find the upstreams block and insert before its closing brace
+        var upIdx = result.search(/upstreams\s*\{/);
+        if (upIdx !== -1) {
+          var upBody = result.substring(upIdx);
+          var upDepth2 = 0;
+          var upEndIdx = 0;
+          for (var k = 0; k < upBody.length; k++) {
+            if (upBody[k] === '{') upDepth2++;
+            else if (upBody[k] === '}') {
+              upDepth2--;
+              if (upDepth2 <= 0) { upEndIdx = upIdx + k; break; }
+            }
+          }
+          result = result.substring(0, upEndIdx) + insertStubs + '\n' + result.substring(upEndIdx);
+        }
+      }
     }
 
     var prefix = '';
@@ -312,6 +611,29 @@
     // Rename socket "/path" → unix-socket "/path" (agent transport shorthand)
     // Use negative lookbehind to avoid matching "unix-socket" → "unix-unix-socket"
     result = result.replace(/(?<![-\w])socket\s+"(\/[^"]*)"/g, 'unix-socket "$1"');
+
+    // Fix bare booleans: true → #true, false → #false (KDL requires # prefix)
+    // Only replace bare true/false that are KDL values (after a key name),
+    // not ones inside strings or comments
+    var boolLines = result.split('\n');
+    for (var bi = 0; bi < boolLines.length; bi++) {
+      var bline = boolLines[bi];
+      // Skip comment lines
+      var commentIdx = bline.indexOf('//');
+      var codePart = commentIdx >= 0 ? bline.substring(0, commentIdx) : bline;
+      var commentPart = commentIdx >= 0 ? bline.substring(commentIdx) : '';
+      // Replace bare true/false not preceded by # and not inside strings
+      // Simple heuristic: replace word-boundary true/false not after #
+      codePart = codePart.replace(/(?<!#)\b(true|false)\b/g, '#$1');
+      boolLines[bi] = codePart + commentPart;
+    }
+    result = boolLines.join('\n');
+
+    // Fix # comments → // comments (# is not a valid KDL comment marker)
+    result = result.replace(/^(\s*)#\s+/gm, '$1// ');
+
+    // Rename workers → worker-threads (old config name)
+    result = result.replace(/\bworkers\s+(\d+)/g, 'worker-threads $1');
 
     // Flatten target { address "addr" [weight N] } → target "addr" [weight=N]
     result = result.replace(
