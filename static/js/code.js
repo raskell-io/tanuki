@@ -698,7 +698,7 @@
     wasmLoading = true;
     wasmLoadPromise = (async () => {
       try {
-        const { default: init, validate, init_panic_hook } = await import('/wasm/sentinel_playground_wasm.js');
+        const { default: init, validate, init_panic_hook } = await import('/wasm/zentinel_playground_wasm.js');
         await init();
         init_panic_hook();
         wasmModule = { validate };
