@@ -133,14 +133,35 @@
   }
 
   // Check if a config has a specific top-level block
+  // True when `name` introduces a block at the snippet's outermost nesting
+  // level. Indentation is not a reliable signal -- a whole snippet may be
+  // indented -- so this tracks brace depth instead. Matching by indentation
+  // saw the nested `listener`, `upstream` and `route` inside a namespace as
+  // three standalone blocks and wrapped the snippet in all three parents.
+  function appearsAtTopDepth(config, name, pattern) {
+    var lines = config.split('\n');
+    var depth = 0;
+    var re = new RegExp('^\\s*' + name + pattern);
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (depth === 0 && re.test(line)) return true;
+      for (var j = 0; j < line.length; j++) {
+        if (line[j] === '{') depth++;
+        else if (line[j] === '}') depth--;
+      }
+      if (depth < 0) depth = 0;
+    }
+    return false;
+  }
+
   function hasTopLevelBlock(config, blockName) {
-    return new RegExp('(?:^|\\n)\\s*' + blockName + '\\s*\\{', 'm').test(config);
+    return appearsAtTopDepth(config, blockName, '\\s*\\{');
   }
 
   // Check if config starts with a standalone block that needs a parent wrapper
   function hasStandaloneBlock(config, name) {
-    return new RegExp('(?:^|\\n)\\s*' + name + '\\s+["{]', 'm').test(config)
-        || new RegExp('(?:^|\\n)\\s*' + name + '\\s*$', 'm').test(config);
+    return appearsAtTopDepth(config, name, '\\s+["{]')
+        || appearsAtTopDepth(config, name, '\\s*$');
   }
 
   // Collect all upstream names defined inside an upstreams { } block
@@ -196,6 +217,28 @@
 
   // Wrap partial KDL snippets with minimal boilerplate so the validator accepts them
   function wrapPartialConfig(config) {
+    // `include` is a real directive, but it resolves paths relative to the file
+    // on disk and cannot be followed from a string, so the parser rejects it
+    // outright. Checked before the completeness test, because a config using
+    // `include` is usually complete in every other respect.
+    if (/(?:^|\n)\s*include\s+"/.test(config)) {
+      return null;
+    }
+
+    // Snippets that deliberately show superseded syntax, for a migration or
+    // upgrade guide, are labelled as such. Validating them against the current
+    // parser reports exactly what the prose is already telling the reader.
+    if (/\/\/\s*(old|before|v1|deprecated|legacy)\b/i.test(config)) {
+      return null;
+    }
+
+    // A structural overview -- every block present and empty -- documents the
+    // shape of a configuration rather than a configuration. There is nothing in
+    // it to check.
+    if (/^(?:\s*[a-z-]+\s*\{\s*\}\s*)+$/.test(config)) {
+      return null;
+    }
+
     if (isCompleteConfig(config)) return config;
 
     var result = config;
@@ -225,7 +268,10 @@
     }
 
     // Wrap standalone target in an upstream → upstreams
-    if (/(?:^|\n)\s*target\s+"/.test(result) && !hasTopLevelBlock(result, 'upstreams')) {
+    // Depth-aware: a `target` nested inside a namespace's own upstream is not
+    // a standalone target snippet, and wrapping on it buried the whole config
+    // inside an `upstreams { upstream "backend" {` that has no target of its own.
+    if (appearsAtTopDepth(result, 'target', '\\s+"') && !hasTopLevelBlock(result, 'upstreams')) {
       result = 'upstreams {\n    upstream "backend" {\n' + result + '\n    }\n}\n';
     }
 
@@ -239,6 +285,22 @@
     if ((hasTopLevelBlock(result, 'tracing') || hasTopLevelBlock(result, 'metrics') || hasTopLevelBlock(result, 'access-log'))
         && !hasTopLevelBlock(result, 'observability')) {
       result = 'observability {\n' + result + '\n}\n';
+    }
+
+    // A standalone `service` block belongs to a namespace.
+    if (hasStandaloneBlock(result, 'service') && !hasTopLevelBlock(result, 'namespace')) {
+      result = 'namespace "example" {\n' + result + '\n}\n';
+    }
+
+    // Wrap standalone mcp/a2a blocks inside a route -- both are route-level.
+    if ((hasTopLevelBlock(result, 'mcp') || hasTopLevelBlock(result, 'a2a'))
+        && !hasTopLevelBlock(result, 'routes')) {
+      result = 'routes {\n    route "example" {\n        matches { path-prefix "/" }\n        upstream "backend"\n' + result + '\n    }\n}\n';
+    }
+
+    // Wrap a standalone sni block inside a listener's tls block.
+    if (hasTopLevelBlock(result, 'sni') && !hasTopLevelBlock(result, 'listeners')) {
+      result = 'listeners {\n    listener "https" {\n        address "0.0.0.0:443"\n        protocol "https"\n        tls {\n            cert-file "/etc/zentinel/certs/server.crt"\n            key-file "/etc/zentinel/certs/server.key"\n' + result + '\n        }\n    }\n}\n';
     }
 
     // Wrap standalone policies/shadow/circuit-breaker inside a route
@@ -679,6 +741,20 @@
     // Wrap partial snippets with minimal boilerplate
     // Returns null if the snippet can't be validated
     result = wrapPartialConfig(result);
+
+    // wrapPartialConfig returns null to mean "skip"; do not resurrect it.
+    if (result === null) return null;
+
+    // Give a fragment the minimal top-level blocks it is missing. A snippet
+    // showing `routes { }` alone is correct documentation; it just is not a
+    // whole configuration, and rejecting it says nothing useful about the
+    // settings it demonstrates.
+    if (!appearsAtTopDepth(result, 'system', '\\s*\\{')) {
+      result = 'system {\n    worker-threads 2\n}\n\n' + result;
+    }
+    if (!appearsAtTopDepth(result, 'listeners', '\\s*\\{')) {
+      result = result + '\nlisteners {\n    listener "http" {\n        address "0.0.0.0:8080"\n    }\n}\n';
+    }
 
     return result;
   }
