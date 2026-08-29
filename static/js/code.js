@@ -103,8 +103,26 @@
   let wasmLoading = false;
   let wasmLoadPromise = null;
 
-  // Playground URL
-  const PLAYGROUND_URL = 'https://sentinel.raskell.io/playground/';
+  // Code-block validation is opt-in, configured by the site rather than baked
+  // into the theme. `base.html` emits `window.tanukiCodeValidation` from
+  // `[extra.code_validation]`; absent that, everything below stays inert and
+  // code blocks keep only their copy button and language label.
+  //
+  //   [extra.code_validation]
+  //   wasm_module = "/wasm/my_validator.js"        # required to enable
+  //   language = "kdl"                             # default: "kdl"
+  //   playground_url = "https://example.com/play/" # optional
+  //   skip_paths = ["/reference/directives"]       # optional
+  //
+  // The module must export `default` (an init function), `validate`, and
+  // optionally `init_panic_hook`.
+  const validationConfig =
+    (typeof window !== 'undefined' && window.tanukiCodeValidation) || null;
+  const WASM_MODULE = (validationConfig && validationConfig.wasm_module) || null;
+  const VALIDATION_LANGUAGE =
+    ((validationConfig && validationConfig.language) || 'kdl').toLowerCase();
+  const PLAYGROUND_URL = (validationConfig && validationConfig.playground_url) || null;
+  const SKIP_PATHS = (validationConfig && validationConfig.skip_paths) || [];
 
   function getLanguageName(lang) {
     if (!lang) return null;
@@ -112,31 +130,33 @@
     return languageNames[lower] || lang.toUpperCase();
   }
 
-  function isKDLBlock(pre, code) {
+  /// Whether this block is in the language the site asked to have validated.
+  function isValidatableBlock(pre, code) {
+    if (!WASM_MODULE) return false;
     const langClass = Array.from(code.classList).find(c => c.startsWith('language-'));
     if (!langClass) return false;
     const lang = langClass.replace('language-', '').toLowerCase();
-    return lang === 'kdl';
+    return lang === VALIDATION_LANGUAGE;
   }
 
-  // Pages where KDL validation should be skipped (partial snippets only)
+  // Pages the site excluded, typically because their snippets are partial by
+  // design and would always fail validation.
   function shouldSkipValidation() {
     const path = window.location.pathname;
-    // Only skip validation on directive reference pages (partial snippets)
-    // Examples and getting-started pages now have complete, valid configs
-    return path.includes('/reference/directives');
+    return SKIP_PATHS.some(prefix => path.includes(prefix));
   }
 
   async function loadWASM() {
+    if (!WASM_MODULE) throw new Error('No validator configured (extra.code_validation)');
     if (wasmModule) return wasmModule;
     if (wasmLoadPromise) return wasmLoadPromise;
 
     wasmLoading = true;
     wasmLoadPromise = (async () => {
       try {
-        const { default: init, validate, init_panic_hook } = await import('/wasm/sentinel_playground_wasm.js');
+        const { default: init, validate, init_panic_hook } = await import(WASM_MODULE);
         await init();
-        init_panic_hook();
+        if (typeof init_panic_hook === 'function') init_panic_hook();
         wasmModule = { validate };
         wasmLoading = false;
         return wasmModule;
@@ -258,14 +278,16 @@
         } else {
           setValidationState(validateBtn, 'valid');
         }
-        playgroundLink.href = getPlaygroundURL(config);
-        playgroundLink.style.display = 'flex';
+        if (playgroundLink) {
+          playgroundLink.href = getPlaygroundURL(config);
+          playgroundLink.style.display = 'flex';
+        }
       } else {
         const errorMsg = result.errors && result.errors[0]
           ? result.errors[0].message.split('\n')[0].substring(0, 30)
           : 'Invalid';
         setValidationState(validateBtn, 'invalid', 'Error');
-        playgroundLink.style.display = 'none';
+        if (playgroundLink) playgroundLink.style.display = 'none';
       }
     } catch (e) {
       setValidationState(validateBtn, 'invalid', 'Load failed');
@@ -300,10 +322,10 @@
       buttonContainer.appendChild(copyBtn);
 
       // Check if this is a KDL block that should be validated
-      const isKDL = isKDLBlock(pre, code);
+      const isValidatable = isValidatableBlock(pre, code);
       const skipValidation = shouldSkipValidation();
 
-      if (isKDL && !skipValidation) {
+      if (isValidatable && !skipValidation) {
         // Create edit button (hover-only, before validate)
         const editBtn = createEditButton();
         buttonContainer.appendChild(editBtn);
@@ -312,10 +334,14 @@
         const validateBtn = createValidateButton();
         buttonContainer.appendChild(validateBtn);
 
-        // Create playground link (hidden initially, appears after validation)
-        const playgroundLink = createPlaygroundLink();
-        playgroundLink.style.display = 'none';
-        buttonContainer.appendChild(playgroundLink);
+        // Playground link, only when the site configured somewhere to send it.
+        // Hidden until a validation succeeds.
+        let playgroundLink = null;
+        if (PLAYGROUND_URL) {
+          playgroundLink = createPlaygroundLink();
+          playgroundLink.style.display = 'none';
+          buttonContainer.appendChild(playgroundLink);
+        }
 
         // Handle validate button click
         validateBtn.addEventListener('click', async () => {
@@ -345,7 +371,7 @@
 
             // Reset validation state
             setValidationState(validateBtn, 'default');
-            playgroundLink.style.display = 'none';
+            if (playgroundLink) playgroundLink.style.display = 'none';
           }
         });
 
