@@ -30,6 +30,22 @@ show_landing = true
 # Blog/landing page settings
 show_hero = true
 
+# Code-block validation (opt-in)
+#
+# When present, `code.js` adds a Validate button to code blocks in the given
+# language and checks them with a WASM module the site provides. Without this
+# section the theme never loads a validator, and code blocks keep only their
+# copy button and language label.
+#
+# The module must export `default` (an init function) and `validate`, and may
+# export `init_panic_hook`. Ship it in the site's own `static/`, not the theme's.
+#
+# [extra.code_validation]
+# wasm_module = "/wasm/my_validator.js"          # required to enable
+# language = "kdl"                               # default: "kdl"
+# playground_url = "https://example.com/play/"   # optional; no link if unset
+# skip_paths = ["/reference/directives"]         # optional; partial-snippet pages
+
 [extra.product]
 # Product landing page settings
 # Example configuration for a Raskell product:

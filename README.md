@@ -89,6 +89,31 @@ list = [
 ]
 ```
 
+### Code-Block Validation (optional)
+
+Code blocks always get a copy button and a language label. A site can also have
+them validated in the browser by supplying a WASM validator:
+
+```toml
+[extra.code_validation]
+wasm_module = "/wasm/my_validator.js"          # required to enable
+language = "kdl"                               # default: "kdl"
+playground_url = "https://example.com/play/"   # optional; adds a link on success
+skip_paths = ["/reference/directives"]         # optional; pages of partial snippets
+```
+
+Blocks in `language` get a Validate button. On success, and only when
+`playground_url` is set, a link appears that opens the snippet in that
+playground.
+
+The module is loaded lazily on first use and must export `default` (an init
+function) and `validate`; `init_panic_hook` is called if exported. `validate`
+should return `{ valid, errors, warnings }`. Ship it from your own site's
+`static/`, not from the theme.
+
+Without this section the theme never loads a validator and never adds a Validate
+button.
+
 ### Book Mode
 
 ```toml

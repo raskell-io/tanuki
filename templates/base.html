@@ -420,6 +420,12 @@
     {# Original tanuki scripts for docs/book/product modes #}
     <script src="{{ get_url(path='js/theme.js') | safe }}" defer></script>
     <script src="{{ get_url(path='js/navigation.js') | safe }}" defer></script>
+    {# Code-block validation is opt-in: without [extra.code_validation] in the
+       site's config, code.js only adds copy buttons and language labels and
+       never reaches for a WASM validator. #}
+    {% if config.extra.code_validation %}
+    <script>window.tanukiCodeValidation = {{ config.extra.code_validation | json_encode() | safe }};</script>
+    {% endif %}
     <script src="{{ get_url(path='js/code.js') | safe }}" defer></script>
 
     {% if config.build_search_index %}
