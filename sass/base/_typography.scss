@@ -308,6 +308,23 @@ table {
   font-size: var(--text-sm);
 }
 
+// On narrow screens a wide table scrolls on its own instead of widening the
+// whole page. `display: block` makes the table its own scroll container; it is
+// limited to small screens because a block table no longer stretches to 100%.
+@media (max-width: 768px) {
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+// Inline code such as a metric name has no natural break points; let it wrap
+// rather than push the page wider than the screen.
+:not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
 th, td {
   padding: 0.75rem 1rem;
   text-align: left;
