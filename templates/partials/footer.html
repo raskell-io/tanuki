@@ -18,7 +18,7 @@
     <div class="container">
         <div class="footer__content">
             <p class="footer__copyright">
-                &copy; {{ now() | date(format="%Y") }} {{ config.extra.author.name | default(value=config.title) }}.
+                &copy; {{ now() | date(format="%Y") }} {{ config.extra.author?.name | default(value=config.title) }}.
                 Built with <a href="https://www.getzola.org" target="_blank" rel="noopener noreferrer" aria-label="Zola static site generator (opens in new tab)">Zola</a>
                 and the <a href="https://github.com/raskell-io/tanuki" target="_blank" rel="noopener noreferrer" aria-label="Tanuki theme on GitHub (opens in new tab)">Tanuki</a> theme.
             </p>

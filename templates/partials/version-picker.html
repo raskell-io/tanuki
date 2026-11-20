@@ -1,11 +1,11 @@
 {# Version Picker Dropdown (docs mode only) #}
 {% if config.extra.versions %}
-{% set current_version = config.extra.versions.current | default(value="latest") %}
+{% set current_version = config.extra.versions?.current | default(value="latest") %}
 
 <div class="version-picker">
     <button class="version-picker__button" aria-haspopup="listbox" aria-expanded="false">
         <span>v{{ current_version }}</span>
-        {% for v in config.extra.versions.list %}
+        {% for v in config.extra.versions?.list %}
         {% if v.version == current_version and v.label is defined %}
         <span class="version-picker__badge">{{ v.label }}</span>
         {% endif %}
@@ -16,7 +16,7 @@
     </button>
 
     <div class="version-picker__dropdown" role="listbox">
-        {% for v in config.extra.versions.list %}
+        {% for v in config.extra.versions?.list %}
         <a href="{{ v.url | safe }}" class="version-picker__item {% if v.version == current_version %}active{% endif %}" role="option">
             v{{ v.version }}
             {% if v.label is defined and v.label %}

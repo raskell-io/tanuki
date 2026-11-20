@@ -2,22 +2,22 @@
 
 {% block title %}{{ section.title }}{% endblock %}
 
-{% set mode = config.extra.mode | default(value="site") %}
-
 {% block sidebar %}
+{% set mode = config.extra.mode | default(value="site") %}
 {% if mode == "docs" %}
 {% include "partials/sidebar.html" %}
 {% endif %}
 {% endblock %}
 
 {% block content %}
+{% set mode = config.extra.mode | default(value="site") %}
 {% if mode == "site" or mode == "blog" %}
 {# raskell.io style articles listing #}
 <header>
     <div class="container">
         <h1>{{ section.title }}</h1>
-        {% if section.extra.subtitle %}
-        <p class="subtitle">{{ section.extra.subtitle }}</p>
+        {% if section.extra?.subtitle %}
+        <p class="subtitle">{{ section.extra?.subtitle }}</p>
         {% endif %}
     </div>
 </header>

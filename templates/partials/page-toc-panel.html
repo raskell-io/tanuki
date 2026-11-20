@@ -1,7 +1,7 @@
 {# Right sidebar for "On this page" headings - docs mode (supports both pages and sections) #}
-{% set toc_items = page.toc | default(value=[]) %}
+{% set toc_items = page?.toc | default(value=[]) %}
 {% if not toc_items and section %}
-    {% set toc_items = section.toc | default(value=[]) %}
+    {% set toc_items = section?.toc | default(value=[]) %}
 {% endif %}
 
 {% if toc_items %}
