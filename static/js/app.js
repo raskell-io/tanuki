@@ -30,6 +30,7 @@
   function applyTheme(theme) {
     const effective = getEffectiveTheme(theme);
     document.documentElement.setAttribute('data-user-color-scheme', effective);
+    document.documentElement.setAttribute('data-theme', effective);
     document.documentElement.setAttribute('data-theme-setting', theme);
 
     // Dispatch event for other components
