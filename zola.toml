@@ -1,0 +1,49 @@
+# Demo site for the theme itself, built from the repository root (this is
+# what the Zola themes gallery does). Templates, sass and static files are
+# used directly from this directory, so there is no `theme = ...` key.
+# Fuller examples for every mode live in examples/{blog,book,docs}.
+base_url = "https://tanuki.raskell.io"
+title = "Tanuki"
+description = "A whimsical Zola theme with Catppuccin colors, Geist typography, and Lucide icons."
+compile_sass = true
+build_search_index = true
+generate_feeds = true
+feed_filenames = ["rss.xml"]
+
+taxonomies = [
+    { name = "tags", feed = true },
+]
+
+[markdown.highlighting]
+theme = "catppuccin-mocha"
+style = "class"
+data_attr_position = "both"
+
+[extra]
+mode = "blog"
+show_theme_toggle = true
+show_about_section = true
+
+[extra.author]
+name = "Tanuki"
+
+[extra.hero]
+title = "Hey, I'm Tanuki"
+subtitle = "A Zola theme for blogs, docs, books, and product pages."
+[extra.hero.cta]
+text = "Read the blog"
+url = "/blog/"
+
+[extra.about]
+summary = "This is the blog mode of the Tanuki theme. See the repository for the docs, book, and product modes."
+
+[extra.social]
+github = "https://github.com/raskell-io/tanuki"
+
+[[extra.nav]]
+name = "Blog"
+url = "/blog/"
+
+[[extra.nav]]
+name = "About"
+url = "/about/"
