@@ -243,10 +243,18 @@
     {# ===== Stylesheets ===== #}
     <link rel="stylesheet" href="{{ get_url(path='style.css') | safe }}">
 
-    {# Syntax highlighting #}
-    {% if config.markdown.highlight_code is defined and config.markdown.highlight_code %}
-    <link rel="stylesheet" href="{{ get_url(path='syntax-light.css') | safe }}" media="(prefers-color-scheme: light)">
-    <link rel="stylesheet" href="{{ get_url(path='syntax-dark.css') | safe }}" media="(prefers-color-scheme: dark)">
+    {# Syntax highlighting: with `style = "class"`, Zola (0.22+) writes the
+       theme CSS into the output directory as giallo.css (single `theme`) or
+       giallo-light.css / giallo-dark.css (`light_theme` + `dark_theme`).
+       Inline style (the default) needs no stylesheet. #}
+    {% set highlighting = config.markdown.highlighting %}
+    {% if highlighting and highlighting.style == "class" %}
+    {% if highlighting.theme %}
+    <link rel="stylesheet" href="{{ get_url(path='giallo.css') | safe }}">
+    {% else %}
+    <link rel="stylesheet" href="{{ get_url(path='giallo-light.css') | safe }}" media="(prefers-color-scheme: light)">
+    <link rel="stylesheet" href="{{ get_url(path='giallo-dark.css') | safe }}" media="(prefers-color-scheme: dark)">
+    {% endif %}
     {% endif %}
 
     {# ===== Preload fonts ===== #}

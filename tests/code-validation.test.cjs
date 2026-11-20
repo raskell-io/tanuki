@@ -38,6 +38,8 @@ function run(validationConfig) {
 
 // Fake a code element in the given language
 const codeEl = (lang) => ({ classList: ['language-' + lang] });
+// Zola 0.22+ (Giallo) output: no language class, language in data-lang
+const gialloCodeEl = (lang) => ({ classList: [], getAttribute: (n) => (n === 'data-lang' ? lang : null) });
 
 let failures = 0;
 const pending = [];
@@ -70,6 +72,8 @@ function check(name, cond) {
   check('configured: kdl block IS validatable', t.isValidatableBlock(null, codeEl('kdl')) === true);
   check('configured: other language is not', t.isValidatableBlock(null, codeEl('toml')) === false);
   check('configured: playground url read', t.PLAYGROUND_URL === 'https://p/');
+  check('configured: data-lang kdl block IS validatable', t.isValidatableBlock(null, gialloCodeEl('kdl')) === true);
+  check('configured: data-lang plain block is not', t.isValidatableBlock(null, gialloCodeEl('plain')) === false);
 }
 
 // --- configured for a different language ---

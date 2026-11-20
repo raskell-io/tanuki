@@ -28,8 +28,9 @@ pre {
   }
 }
 
-// Header bar with language label
-pre[data-lang]::before {
+// Header bar with language label ("plain" is what Zola emits for fences
+// without a language, so it gets no label)
+pre[data-lang]:not([data-lang="plain"])::before {
   content: attr(data-lang);
   position: absolute;
   top: 0;
@@ -256,7 +257,8 @@ pre.editing {
 }
 
 // For pre without data-lang, adjust padding
-pre:not([data-lang]) code {
+pre:not([data-lang]) code,
+pre[data-lang="plain"] code {
   padding-top: 1.25rem;
 }
 
@@ -280,6 +282,23 @@ pre.line-numbers {
   }
 }
 
+// Giallo (Zola 0.22+) line wrappers and line numbers
+.giallo-l {
+  display: inline-block;
+  min-height: 1lh;
+  width: 100%;
+}
+
+.giallo-ln {
+  display: inline-block;
+  user-select: none;
+  margin-right: 0.4em;
+  padding: 0.4em;
+  min-width: 3ch;
+  text-align: right;
+  opacity: 0.8;
+}
+
 // Highlighted lines
 pre code .highlighted {
   background: rgba(203, 166, 247, 0.1);
@@ -290,8 +309,9 @@ pre code .highlighted {
 }
 
 // =============================================================================
-// Catppuccin Syntax Highlighting (for Zola CSS highlighting mode)
-// Zola uses syntect which generates detailed .z-* classes
+// Catppuccin Syntax Highlighting for scope-named .z-* classes (syntect,
+// Zola <= 0.21). Zola 0.22+ (Giallo) emits numbered classes styled by the
+// generated giallo.css instead, so these rules do not apply there.
 // =============================================================================
 
 pre code {
@@ -445,13 +465,15 @@ pre code {
   }
 }
 
-// Light theme: white background for code blocks
-[data-theme="light"] pre {
+// Light theme: white background for code blocks (except Giallo class-styled
+// blocks, whose background comes from the generated theme CSS so the token
+// colours stay readable)
+[data-theme="light"] pre:not(.giallo.z-code) {
   background: #fff;
   border-color: var(--color-border);
 }
 
-[data-theme="light"] pre[data-lang]::before {
+[data-theme="light"] pre[data-lang]:not([data-lang="plain"])::before {
   background: var(--ctp-base);
   border-bottom-color: var(--color-border);
 }
