@@ -1,5 +1,5 @@
 [tools]
-zola = "0.19.2"
+zola = "0.23.6"
 
 # Sentinel for static file serving (serve:all task)
 # Install: curl -fsSL https://getsentinel.raskell.io | sh

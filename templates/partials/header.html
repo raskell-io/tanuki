@@ -254,13 +254,13 @@
 
         {# Home site link (e.g., back to main landing page) #}
         {% if config.extra.home_site %}
-        <a href="{{ config.extra.home_site.url | safe }}" class="header__home" aria-label="Go to {{ config.extra.home_site.name | default(value='home') }}" title="{{ config.extra.home_site.name | default(value='Home') }}">
-            {% if config.extra.home_site.logo %}
-            {% set home_logo_path = config.extra.home_site.logo %}
-            {% if not home_logo_path is containing("/") %}
+        <a href="{{ config.extra.home_site?.url | safe }}" class="header__home" aria-label="Go to {{ config.extra.home_site?.name | default(value='home') }}" title="{{ config.extra.home_site?.name | default(value='Home') }}">
+            {% if config.extra.home_site?.logo %}
+            {% set home_logo_path = config.extra.home_site?.logo %}
+            {% if home_logo_path is not containing(pat="/") %}
                 {% set home_logo_path = "assets/" ~ home_logo_path %}
             {% endif %}
-            <img src="{{ get_url(path=home_logo_path) | safe }}" alt="{{ config.extra.home_site.name | default(value='Home') }}" class="header__home-logo">
+            <img src="{{ get_url(path=home_logo_path) | safe }}" alt="{{ config.extra.home_site?.name | default(value='Home') }}" class="header__home-logo">
             {% else %}
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -275,7 +275,7 @@
         <a href="{{ config.base_url | safe }}" class="header__logo" aria-label="{{ config.title }} - Go to homepage">
             {% if config.extra.logo %}
             {% set logo_path = config.extra.logo %}
-            {% if not logo_path is containing("/") %}
+            {% if logo_path is not containing(pat="/") %}
                 {% set logo_path = "assets/" ~ logo_path %}
             {% endif %}
             <img src="{{ get_url(path=logo_path) | safe }}" alt="" aria-hidden="true">
@@ -343,7 +343,7 @@
 
             {# Edit on GitHub link #}
             {% if config.extra.edit_url and page %}
-            <a href="{{ config.extra.edit_url }}/{{ page.relative_path }}" class="btn btn--icon btn--ghost" aria-label="Edit this page on GitHub (opens in new tab)" target="_blank" rel="noopener noreferrer" title="Edit this page">
+            <a href="{{ config.extra.edit_url }}/{{ page?.relative_path }}" class="btn btn--icon btn--ghost" aria-label="Edit this page on GitHub (opens in new tab)" target="_blank" rel="noopener noreferrer" title="Edit this page">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
                     <path d="m15 5 4 4"/>

@@ -64,9 +64,9 @@
             <div class="sidebar__action">
                 <span class="sidebar__action-label">Version</span>
                 <div class="sidebar__version">
-                    <span class="sidebar__version-current">v{{ config.extra.versions.current }}</span>
-                    {% for v in config.extra.versions.list %}
-                    {% if v.version != config.extra.versions.current %}
+                    <span class="sidebar__version-current">v{{ config.extra.versions?.current }}</span>
+                    {% for v in config.extra.versions?.list %}
+                    {% if v.version != config.extra.versions?.current %}
                     <a href="{{ v.url | safe }}" class="sidebar__version-link">v{{ v.version }}</a>
                     {% endif %}
                     {% endfor %}

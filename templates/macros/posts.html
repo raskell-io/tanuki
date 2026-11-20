@@ -1,13 +1,13 @@
 {# =============================================================================
-   Macros: Posts
+   Components: Posts
    Reusable components for displaying posts/articles
    ============================================================================= #}
 
 {# -----------------------------------------------------------------------------
    Post Row - Simple date | title format
-   Usage: {{ macros::post_row(page=page) }}
+   Usage: {{<posts.post_row page={page} />}}
    ----------------------------------------------------------------------------- #}
-{% macro post_row(page, date_format="%b %d") %}
+{% component posts.post_row(page, date_format="%b %d") %}
 <article class="post">
     <a href="{{ page.permalink | safe }}">
         <div class="post-row">
@@ -18,13 +18,13 @@
         </div>
     </a>
 </article>
-{% endmacro %}
+{% endcomponent posts.post_row %}
 
 {# -----------------------------------------------------------------------------
    Post Card - With description and meta
-   Usage: {{ macros::post_card(page=page, show_description=true, show_tags=true) }}
+   Usage: {{<posts.post_card page={page} show_description={true} show_tags={true} />}}
    ----------------------------------------------------------------------------- #}
-{% macro post_card(page, show_description=true, show_tags=true, max_tags=3) %}
+{% component posts.post_card(page, show_description=true, show_tags=true, max_tags=3) %}
 <article class="blog-card">
     <div class="blog-card__content">
         <h2 class="blog-card__title">
@@ -37,47 +37,47 @@
             {% if page.date %}
             <time datetime="{{ page.date }}">{{ page.date | date(format="%B %d, %Y") }}</time>
             {% endif %}
-            {% if show_tags and page.taxonomies.tags %}
+            {% if show_tags and page.taxonomies?.tags %}
             <div class="blog-card__tags">
-                {% for tag in page.taxonomies.tags | slice(end=max_tags) %}
-                <a href="{{ get_taxonomy_url(kind='tags', name=tag) | safe }}" class="tag">{{ tag }}</a>
+                {% for tag in page.taxonomies?.tags [:max_tags] %}
+                <a href="{{ get_taxonomy_url(kind='tags', term=tag) | safe }}" class="tag">{{ tag }}</a>
                 {% endfor %}
             </div>
             {% endif %}
         </div>
     </div>
 </article>
-{% endmacro %}
+{% endcomponent posts.post_card %}
 
 {# -----------------------------------------------------------------------------
    Post List - List of post rows
-   Usage: {{ macros::post_list(pages=section.pages, limit=6) }}
+   Usage: {{<posts.post_list pages={section.pages} limit={6} />}}
    ----------------------------------------------------------------------------- #}
-{% macro post_list(pages, limit=10, date_format="%b %d") %}
+{% component posts.post_list(pages, limit=10, date_format="%b %d") %}
 <div class="posts">
-    {% for page in pages | slice(end=limit) %}
-    {{ self::post_row(page=page, date_format=date_format) }}
+    {% for page in pages [:limit] %}
+    {{<posts.post_row page={page} date_format={date_format} />}}
     {% endfor %}
 </div>
-{% endmacro %}
+{% endcomponent posts.post_list %}
 
 {# -----------------------------------------------------------------------------
    Post Grid - Grid of post cards
-   Usage: {{ macros::post_grid(pages=section.pages, limit=6) }}
+   Usage: {{<posts.post_grid pages={section.pages} limit={6} />}}
    ----------------------------------------------------------------------------- #}
-{% macro post_grid(pages, limit=10, show_description=true, show_tags=true) %}
+{% component posts.post_grid(pages, limit=10, show_description=true, show_tags=true) %}
 <div class="blog-posts">
-    {% for page in pages | slice(end=limit) %}
-    {{ self::post_card(page=page, show_description=show_description, show_tags=show_tags) }}
+    {% for page in pages [:limit] %}
+    {{<posts.post_card page={page} show_description={show_description} show_tags={show_tags} />}}
     {% endfor %}
 </div>
-{% endmacro %}
+{% endcomponent posts.post_grid %}
 
 {# -----------------------------------------------------------------------------
    Post Meta - Date, reading time, tags
-   Usage: {{ macros::post_meta(page=page) }}
+   Usage: {{<posts.post_meta page={page} />}}
    ----------------------------------------------------------------------------- #}
-{% macro post_meta(page, show_reading_time=true, show_tags=true) %}
+{% component posts.post_meta(page, show_reading_time=true, show_tags=true) %}
 <div class="post-meta">
     <div class="meta-line">
         {% if page.date %}
@@ -88,14 +88,14 @@
         <span class="reading-time">{{ page.reading_time }} min read</span>
         {% endif %}
     </div>
-    {% if show_tags and page.taxonomies.tags %}
+    {% if show_tags and page.taxonomies?.tags %}
     <div class="article-taxonomies">
         <div class="tags">
-            {% for tag in page.taxonomies.tags %}
-            <a href="{{ get_taxonomy_url(kind='tags', name=tag) | safe }}" class="tag">{{ tag }}</a>
+            {% for tag in page.taxonomies?.tags %}
+            <a href="{{ get_taxonomy_url(kind='tags', term=tag) | safe }}" class="tag">{{ tag }}</a>
             {% endfor %}
         </div>
     </div>
     {% endif %}
 </div>
-{% endmacro %}
+{% endcomponent posts.post_meta %}

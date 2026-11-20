@@ -35,25 +35,11 @@
 
             {# Subsections - collect and sort by weight #}
             {% if root_section.subsections %}
-            {% set_global subsection_data = [] %}
-            {% for subsection_path in root_section.subsections %}
-                {% set sec = get_section(path=subsection_path) %}
-                {% set w = sec.weight | default(value=999) %}
-                {# Pad weight to 3 digits for proper string sorting, then concat with path #}
-                {% if w < 10 %}
-                    {% set w_str = "00" ~ w %}
-                {% elif w < 100 %}
-                    {% set w_str = "0" ~ w %}
-                {% else %}
-                    {% set w_str = w %}
-                {% endif %}
-                {% set_global subsection_data = subsection_data | concat(with=[w_str ~ "|" ~ subsection_path]) %}
-            {% endfor %}
-            {% set_global subsection_data = subsection_data | sort %}
+            {# Sort subsections by weight; ties keep path order (sort is stable) #}
+            {% set subsection_paths = root_section.subsections | sort %}
+            {% set subsections = [get_section(path=p) for p in subsection_paths] | sort(attribute="weight") %}
 
-            {% for item in subsection_data %}
-            {% set parts = item | split(pat="|") %}
-            {% set subsection = get_section(path=parts.1) %}
+            {% for subsection in subsections %}
             <div class="toc-overlay__section">
                 <div class="toc-overlay__section-title">{{ subsection.title }}</div>
                 <ul class="toc-overlay__list">
@@ -80,11 +66,11 @@
                     </a>
                 </li>
                 {% for page in root_section.pages %}
-                {% if page.extra.hide_from_toc is not defined or not page.extra.hide_from_toc %}
+                {% if page?.extra?.hide_from_toc is not defined or not page?.extra?.hide_from_toc %}
                 <li class="toc-overlay__item">
-                    <a href="{{ page.permalink | safe }}" class="toc-overlay__link{% if current_path is defined and current_path == page.path %} toc-overlay__link--active{% endif %}">
+                    <a href="{{ page?.permalink | safe }}" class="toc-overlay__link{% if current_path is defined and current_path == page?.path %} toc-overlay__link--active{% endif %}">
                         <span class="toc-overlay__chapter">Chapter {{ loop.index }}</span>
-                        <span class="toc-overlay__page-title">{{ page.title }}</span>
+                        <span class="toc-overlay__page-title">{{ page?.title }}</span>
                     </a>
                 </li>
                 {% endif %}
@@ -101,9 +87,9 @@
             <div class="toc-overlay__action">
                 <span class="toc-overlay__action-label">Version</span>
                 <div class="toc-overlay__version">
-                    <span class="toc-overlay__version-current">v{{ config.extra.versions.current }}</span>
-                    {% for v in config.extra.versions.list %}
-                    {% if v.version != config.extra.versions.current %}
+                    <span class="toc-overlay__version-current">v{{ config.extra.versions?.current }}</span>
+                    {% for v in config.extra.versions?.list %}
+                    {% if v.version != config.extra.versions?.current %}
                     <a href="{{ v.url | safe }}" class="toc-overlay__version-link">v{{ v.version }}</a>
                     {% endif %}
                     {% endfor %}

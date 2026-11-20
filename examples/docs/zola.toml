@@ -8,9 +8,13 @@ build_search_index = true
 generate_feeds = false
 
 [markdown]
-highlight_code = true
-highlight_theme = "css"
 insert_anchor_links = "left"
+
+[markdown.highlighting]
+theme = "catppuccin-mocha"
+style = "class"
+# Also put data-lang on <pre> so the theme's language label works without JS
+data_attr_position = "both"
 
 [extra]
 mode = "docs"

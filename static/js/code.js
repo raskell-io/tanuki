@@ -53,6 +53,7 @@
     sql: 'SQL',
     sh: 'Shell',
     bash: 'Bash',
+    shellscript: 'Shell',
     zsh: 'Zsh',
     fish: 'Fish',
     ps: 'PowerShell',
@@ -130,13 +131,21 @@
     return languageNames[lower] || lang.toUpperCase();
   }
 
+  /// Language of a code block: the `language-*` class (Zola <= 0.21) or the
+  /// `data-lang` attribute (Zola 0.22+). "plain" means no language was given.
+  function getCodeLanguage(code) {
+    const langClass = Array.from(code.classList).find(c => c.startsWith('language-'));
+    if (langClass) return langClass.replace('language-', '');
+    const lang = code.getAttribute('data-lang');
+    return lang && lang !== 'plain' ? lang : null;
+  }
+
   /// Whether this block is in the language the site asked to have validated.
   function isValidatableBlock(pre, code) {
     if (!WASM_MODULE) return false;
-    const langClass = Array.from(code.classList).find(c => c.startsWith('language-'));
-    if (!langClass) return false;
-    const lang = langClass.replace('language-', '').toLowerCase();
-    return lang === VALIDATION_LANGUAGE;
+    const lang = getCodeLanguage(code);
+    if (!lang) return false;
+    return lang.toLowerCase() === VALIDATION_LANGUAGE;
   }
 
   // Pages the site excluded, typically because their snippets are partial by
@@ -306,10 +315,9 @@
       // Make pre relative for absolute positioning
       pre.style.position = 'relative';
 
-      // Get language from class (e.g., "language-javascript")
-      const langClass = Array.from(code.classList).find(c => c.startsWith('language-'));
-      if (langClass) {
-        const lang = langClass.replace('language-', '');
+      // Get language from class (e.g., "language-javascript") or data-lang
+      const lang = getCodeLanguage(code);
+      if (lang) {
         pre.setAttribute('data-lang', getLanguageName(lang) || lang);
       }
 

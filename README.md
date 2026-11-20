@@ -13,7 +13,7 @@
 
 <p align="center">
   <a href="https://www.getzola.org/">
-    <img alt="Zola" src="https://img.shields.io/badge/Zola-0.19+-000000?logo=zola&logoColor=white&style=for-the-badge">
+    <img alt="Zola" src="https://img.shields.io/badge/Zola-0.23+-000000?logo=zola&logoColor=white&style=for-the-badge">
   </a>
   <a href="https://catppuccin.com/">
     <img alt="Catppuccin" src="https://img.shields.io/badge/Catppuccin-cba6f7?style=for-the-badge">
@@ -49,6 +49,17 @@
 - **Keyboard Navigation** — Arrow keys for prev/next, `/` for search
 - **SEO & Accessibility** — JSON-LD structured data, ARIA landmarks, semantic HTML
 
+## Requirements
+
+Tanuki requires **Zola 0.23 or later** (Tera v2 templates, Giallo syntax
+highlighting). On Zola 0.19 to 0.21, use the
+[`zola-0.19-0.21`](https://github.com/raskell-io/tanuki/tree/zola-0.19-0.21)
+tag instead:
+
+```bash
+git clone --branch zola-0.19-0.21 https://github.com/raskell-io/tanuki themes/tanuki
+```
+
 ## Installation
 
 ```bash
@@ -72,9 +83,10 @@ title = "My Project Docs"
 theme = "tanuki"
 build_search_index = true
 
-[markdown]
-highlight_code = true
-highlight_theme = "css"
+[markdown.highlighting]
+theme = "catppuccin-mocha"
+style = "class"
+data_attr_position = "both"
 
 [extra]
 mode = "docs"
@@ -122,9 +134,10 @@ title = "The Complete Guide"
 theme = "tanuki"
 build_search_index = true
 
-[markdown]
-highlight_code = true
-highlight_theme = "css"
+[markdown.highlighting]
+theme = "catppuccin-mocha"
+style = "class"
+data_attr_position = "both"
 
 [extra]
 mode = "book"
@@ -143,9 +156,10 @@ taxonomies = [
     { name = "tags", feed = true },
 ]
 
-[markdown]
-highlight_code = true
-highlight_theme = "css"
+[markdown.highlighting]
+theme = "catppuccin-mocha"
+style = "class"
+data_attr_position = "both"
 
 [extra]
 mode = "blog"
@@ -161,6 +175,26 @@ url = "/blog/"
 [[extra.nav]]
 name = "About"
 url = "/about/"
+```
+
+### Syntax Highlighting
+
+With `style = "class"` in `[markdown.highlighting]`, Zola writes the theme CSS
+into the output directory and Tanuki links it: `giallo.css` for a single
+`theme`, or `giallo-light.css` / `giallo-dark.css` (by `prefers-color-scheme`)
+when `light_theme` and `dark_theme` are set. With the default inline style no
+stylesheet is needed. `data_attr_position = "both"` puts `data-lang` on the
+`<pre>` as well, which the language label uses in blog mode. Theme names come
+from [Giallo](https://github.com/getzola/giallo?tab=readme-ov-file#built-in).
+
+## Components
+
+The reusable pieces in `templates/macros/` are Tera components, available in
+any template or in Markdown content without an import, for example:
+
+```jinja
+{{<posts.post_list pages={section.pages} limit={6} />}}
+{{<ui.button text="Learn more" url="/about/" />}}
 ```
 
 ## Keyboard Shortcuts

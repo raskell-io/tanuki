@@ -12,9 +12,11 @@ taxonomies = [
     { name = "tags", feed = true },
 ]
 
-[markdown]
-highlight_code = true
-highlight_theme = "base16-ocean-dark"
+[markdown.highlighting]
+theme = "catppuccin-mocha"
+style = "class"
+# Also put data-lang on <pre> so the theme's language label works without JS
+data_attr_position = "both"
 
 [extra]
 mode = "blog"

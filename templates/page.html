@@ -4,9 +4,8 @@
 
 {% block body_class %}page-{{ page.slug }}{% endblock %}
 
-{% set mode = config.extra.mode | default(value="site") %}
-
 {% block sidebar %}
+{% set mode = config.extra.mode | default(value="site") %}
 {% if mode == "docs" %}
 {% include "partials/sidebar.html" %}
 {% endif %}
@@ -17,6 +16,7 @@
 {% endblock %}
 
 {% block content %}
+{% set mode = config.extra.mode | default(value="site") %}
 {% if mode == "site" or mode == "blog" %}
 {# raskell.io style article page #}
 <div class="container">
@@ -27,30 +27,30 @@
                     <h1>{{ page.title }}</h1>
                     <div class="post-meta">
                         <div class="meta-line">
-                            {% if config.extra.author.name or page.extra.author %}
-                            <span class="author">{{ page.extra.author | default(value=config.extra.author.name) }}</span>
+                            {% if config.extra.author?.name or page.extra?.author %}
+                            <span class="author">{{ page.extra?.author | default(value=config.extra.author?.name) }}</span>
                             {% endif %}
                             {% if page.date %}
-                            {% if config.extra.author.name or page.extra.author %}<span class="separator">·</span>{% endif %}
+                            {% if config.extra.author?.name or page.extra?.author %}<span class="separator">·</span>{% endif %}
                             <time>{{ page.date | date(format="%B %d, %Y") }}</time>
                             {% endif %}
                             {% if page.reading_time %}
-                            {% if page.date or config.extra.author.name or page.extra.author %}<span class="separator">·</span>{% endif %}
+                            {% if page.date or config.extra.author?.name or page.extra?.author %}<span class="separator">·</span>{% endif %}
                             <span class="reading-time">{{ page.reading_time }} min read</span>
                             {% endif %}
                         </div>
-                        {% if page.taxonomies.tags or page.taxonomies.series %}
+                        {% if page.taxonomies?.tags or page.taxonomies?.series %}
                         <div class="article-taxonomies">
-                            {% if page.taxonomies.tags %}
+                            {% if page.taxonomies?.tags %}
                             <div class="tags">
-                                {% for tag in page.taxonomies.tags %}
-                                <a href="{{ get_taxonomy_url(kind='tags', name=tag) }}" class="tag">{{ tag }}</a>
+                                {% for tag in page.taxonomies?.tags %}
+                                <a href="{{ get_taxonomy_url(kind='tags', term=tag) }}" class="tag">{{ tag }}</a>
                                 {% endfor %}
                             </div>
                             {% endif %}
-                            {% if page.taxonomies.series %}
+                            {% if page.taxonomies?.series %}
                             <div class="series-badge">
-                                Series: <a href="{{ get_taxonomy_url(kind='series', name=page.taxonomies.series[0]) }}">{{ page.taxonomies.series[0] }}</a>
+                                Series: <a href="{{ get_taxonomy_url(kind='series', term=page.taxonomies?.series[0]) }}">{{ page.taxonomies?.series[0] }}</a>
                             </div>
                             {% endif %}
                         </div>
@@ -58,8 +58,8 @@
                     </div>
                 </div>
             </div>
-            {% if page.extra.image %}
-            <img src="/{{ page.extra.image }}" alt="{{ page.title }}" class="post-thumbnail" loading="lazy" decoding="async">
+            {% if page.extra?.image %}
+            <img src="/{{ page.extra?.image }}" alt="{{ page.title }}" class="post-thumbnail" loading="lazy" decoding="async">
             {% endif %}
         </header>
     </article>
@@ -72,16 +72,16 @@
 <div class="container">
     <nav class="flex container suggested">
         {% if page.lower %}
-        <a rel="prev" href="{{ page.lower.permalink }}" title="Previous post (older)">
+        <a rel="prev" href="{{ page.lower?.permalink }}" title="Previous post (older)">
             <span>← Previous</span>
-            <strong>{{ page.lower.title }}</strong>
+            <strong>{{ page.lower?.title }}</strong>
         </a>
         {% endif %}
 
         {% if page.higher %}
-        <a rel="next" href="{{ page.higher.permalink }}" title="Next post (newer)">
+        <a rel="next" href="{{ page.higher?.permalink }}" title="Next post (newer)">
             <span>Next →</span>
-            <strong>{{ page.higher.title }}</strong>
+            <strong>{{ page.higher?.title }}</strong>
         </a>
         {% endif %}
     </nav>
@@ -103,8 +103,8 @@
     </div>
 
     {# Hidden metadata for structured data #}
-    {% if config.extra.author.name is defined and config.extra.author.name %}
-    <meta itemprop="author" content="{{ config.extra.author.name }}">
+    {% if config.extra.author?.name is defined and config.extra.author?.name %}
+    <meta itemprop="author" content="{{ config.extra.author?.name }}">
     {% endif %}
     {% if page.updated is defined and page.updated %}
     <meta itemprop="dateModified" content="{{ page.updated | date(format='%Y-%m-%d') }}">
@@ -115,16 +115,16 @@
 {% if mode == "docs" or mode == "book" %}
 <nav class="page-nav" aria-label="Page navigation">
     {% if page.earlier %}
-    <a href="{{ page.earlier.permalink | safe }}" class="page-nav__link page-nav__link--prev" rel="prev" aria-label="Previous page: {{ page.earlier.title }}">
+    <a href="{{ page.earlier?.permalink | safe }}" class="page-nav__link page-nav__link--prev" rel="prev" aria-label="Previous page: {{ page.earlier?.title }}">
         <span class="page-nav__label" aria-hidden="true">Previous</span>
-        <span class="page-nav__title">{{ page.earlier.title }}</span>
+        <span class="page-nav__title">{{ page.earlier?.title }}</span>
     </a>
     {% endif %}
 
     {% if page.later %}
-    <a href="{{ page.later.permalink | safe }}" class="page-nav__link page-nav__link--next" rel="next" aria-label="Next page: {{ page.later.title }}">
+    <a href="{{ page.later?.permalink | safe }}" class="page-nav__link page-nav__link--next" rel="next" aria-label="Next page: {{ page.later?.title }}">
         <span class="page-nav__label" aria-hidden="true">Next</span>
-        <span class="page-nav__title">{{ page.later.title }}</span>
+        <span class="page-nav__title">{{ page.later?.title }}</span>
     </a>
     {% endif %}
 </nav>

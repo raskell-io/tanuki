@@ -12,27 +12,27 @@
     </script>
 
     {# ===== Primary Meta Tags ===== #}
-    <title>{% block title %}{{ page.title | default(value=section.title) | default(value=config.title) }}{% endblock %} | {{ config.title }}</title>
+    <title>{% block title %}{{ page?.title | default(value=section?.title) | default(value=config.title) }}{% endblock %} | {{ config.title }}</title>
 
     {# Description #}
-    {% if page.description %}
-    <meta name="description" content="{{ page.description }}">
-    {% elif section.description is defined and section.description %}
-    <meta name="description" content="{{ section.description }}">
+    {% if page?.description %}
+    <meta name="description" content="{{ page?.description }}">
+    {% elif section?.description is defined and section?.description %}
+    <meta name="description" content="{{ section?.description }}">
     {% else %}
     <meta name="description" content="{{ config.description }}">
     {% endif %}
 
     {# Keywords from tags #}
-    {% if page.taxonomies.tags is defined and page.taxonomies.tags %}
-    <meta name="keywords" content="{{ page.taxonomies.tags | join(sep=', ') }}">
+    {% if page?.taxonomies?.tags is defined and page?.taxonomies?.tags %}
+    <meta name="keywords" content="{{ page?.taxonomies?.tags | join(sep=', ') }}">
     {% elif config.extra.keywords is defined %}
     <meta name="keywords" content="{{ config.extra.keywords }}">
     {% endif %}
 
     {# Author #}
-    {% if config.extra.author.name is defined %}
-    <meta name="author" content="{{ config.extra.author.name }}">
+    {% if config.extra.author?.name is defined %}
+    <meta name="author" content="{{ config.extra.author?.name }}">
     {% endif %}
 
     {# Robots #}
@@ -51,17 +51,17 @@
     {% if current_url is defined %}
     <meta property="og:url" content="{{ current_url | safe }}">
     {% endif %}
-    {% if page.title is defined %}
-    <meta property="og:title" content="{{ page.title }}">
-    {% elif section.title is defined %}
-    <meta property="og:title" content="{{ section.title }}">
+    {% if page?.title is defined %}
+    <meta property="og:title" content="{{ page?.title }}">
+    {% elif section?.title is defined %}
+    <meta property="og:title" content="{{ section?.title }}">
     {% else %}
     <meta property="og:title" content="{{ config.title }}">
     {% endif %}
-    {% if page.description is defined %}
-    <meta property="og:description" content="{{ page.description }}">
-    {% elif section.description is defined %}
-    <meta property="og:description" content="{{ section.description }}">
+    {% if page?.description is defined %}
+    <meta property="og:description" content="{{ page?.description }}">
+    {% elif section?.description is defined %}
+    <meta property="og:description" content="{{ section?.description }}">
     {% else %}
     <meta property="og:description" content="{{ config.description }}">
     {% endif %}
@@ -76,14 +76,14 @@
 
     {# Article-specific OG tags #}
     {% if page %}
-    {% if page.date is defined and page.date %}
-    <meta property="article:published_time" content="{{ page.date | date(format='%Y-%m-%dT%H:%M:%S') }}">
+    {% if page?.date is defined and page?.date %}
+    <meta property="article:published_time" content="{{ page?.date | date(format='%Y-%m-%dT%H:%M:%S') }}">
     {% endif %}
-    {% if page.updated is defined and page.updated %}
-    <meta property="article:modified_time" content="{{ page.updated | date(format='%Y-%m-%dT%H:%M:%S') }}">
+    {% if page?.updated is defined and page?.updated %}
+    <meta property="article:modified_time" content="{{ page?.updated | date(format='%Y-%m-%dT%H:%M:%S') }}">
     {% endif %}
-    {% if page.taxonomies.tags is defined %}
-    {% for tag in page.taxonomies.tags %}
+    {% if page?.taxonomies?.tags is defined %}
+    {% for tag in page?.taxonomies?.tags %}
     <meta property="article:tag" content="{{ tag }}">
     {% endfor %}
     {% endif %}
@@ -94,17 +94,17 @@
     {% if current_url is defined %}
     <meta name="twitter:url" content="{{ current_url | safe }}">
     {% endif %}
-    {% if page.title is defined %}
-    <meta name="twitter:title" content="{{ page.title }}">
-    {% elif section.title is defined %}
-    <meta name="twitter:title" content="{{ section.title }}">
+    {% if page?.title is defined %}
+    <meta name="twitter:title" content="{{ page?.title }}">
+    {% elif section?.title is defined %}
+    <meta name="twitter:title" content="{{ section?.title }}">
     {% else %}
     <meta name="twitter:title" content="{{ config.title }}">
     {% endif %}
-    {% if page.description is defined %}
-    <meta name="twitter:description" content="{{ page.description }}">
-    {% elif section.description is defined %}
-    <meta name="twitter:description" content="{{ section.description }}">
+    {% if page?.description is defined %}
+    <meta name="twitter:description" content="{{ page?.description }}">
+    {% elif section?.description is defined %}
+    <meta name="twitter:description" content="{{ section?.description }}">
     {% else %}
     <meta name="twitter:description" content="{{ config.description }}">
     {% endif %}
@@ -143,7 +143,7 @@
             {
                 "@type": "Organization",
                 "@id": "https://zentinelproxy.io/#organization",
-                "name": "{{ config.extra.author.name | default(value='raskell.io') }}",
+                "name": "{{ config.extra.author?.name | default(value='raskell.io') }}",
                 "url": "https://zentinelproxy.io",
                 "logo": {
                     "@type": "ImageObject",
@@ -156,17 +156,17 @@
                 "@type": "WebPage",
                 "@id": "{% if current_url is defined %}{{ current_url | safe }}{% else %}{{ config.base_url | safe }}{% endif %}#webpage",
                 "url": "{% if current_url is defined %}{{ current_url | safe }}{% else %}{{ config.base_url | safe }}{% endif %}",
-                "name": "{% if page.title is defined %}{{ page.title }}{% elif section.title is defined %}{{ section.title }}{% else %}{{ config.title }}{% endif %}",
+                "name": "{% if page?.title is defined %}{{ page?.title }}{% elif section?.title is defined %}{{ section?.title }}{% else %}{{ config.title }}{% endif %}",
                 "isPartOf": {
                     "@id": "{{ config.base_url | safe }}#website"
                 },
-                "description": "{% if page.description is defined %}{{ page.description }}{% elif section.description is defined %}{{ section.description }}{% else %}{{ config.description }}{% endif %}",
+                "description": "{% if page?.description is defined %}{{ page?.description }}{% elif section?.description is defined %}{{ section?.description }}{% else %}{{ config.description }}{% endif %}",
                 "inLanguage": "{{ lang | default(value='en') }}"
-                {% if page.date is defined and page.date %},
-                "datePublished": "{{ page.date | date(format='%Y-%m-%d') }}"
+                {% if page?.date is defined and page?.date %},
+                "datePublished": "{{ page?.date | date(format='%Y-%m-%d') }}"
                 {% endif %}
-                {% if page.updated is defined and page.updated %},
-                "dateModified": "{{ page.updated | date(format='%Y-%m-%d') }}"
+                {% if page?.updated is defined and page?.updated %},
+                "dateModified": "{{ page?.updated | date(format='%Y-%m-%d') }}"
                 {% endif %}
             }
             {% if page %}
@@ -176,15 +176,15 @@
                 "isPartOf": {
                     "@id": "{{ current_url | safe }}#webpage"
                 },
-                "headline": "{{ page.title }}",
-                {% if page.description is defined and page.description %}
-                "description": "{{ page.description }}",
+                "headline": "{{ page?.title }}",
+                {% if page?.description is defined and page?.description %}
+                "description": "{{ page?.description }}",
                 {% endif %}
-                {% if page.date is defined and page.date %}
-                "datePublished": "{{ page.date | date(format='%Y-%m-%dT%H:%M:%S') }}",
+                {% if page?.date is defined and page?.date %}
+                "datePublished": "{{ page?.date | date(format='%Y-%m-%dT%H:%M:%S') }}",
                 {% endif %}
-                {% if page.updated is defined and page.updated %}
-                "dateModified": "{{ page.updated | date(format='%Y-%m-%dT%H:%M:%S') }}",
+                {% if page?.updated is defined and page?.updated %}
+                "dateModified": "{{ page?.updated | date(format='%Y-%m-%dT%H:%M:%S') }}",
                 {% endif %}
                 "author": {
                     "@id": "https://zentinelproxy.io/#organization"
@@ -192,11 +192,11 @@
                 "publisher": {
                     "@id": "https://zentinelproxy.io/#organization"
                 },
-                {% if page.taxonomies.tags is defined %}
-                "keywords": "{{ page.taxonomies.tags | join(sep=', ') }}",
+                {% if page?.taxonomies?.tags is defined %}
+                "keywords": "{{ page?.taxonomies?.tags | join(sep=', ') }}",
                 {% endif %}
-                {% if page.word_count is defined %}
-                "wordCount": {{ page.word_count }},
+                {% if page?.word_count is defined %}
+                "wordCount": {{ page?.word_count }},
                 {% endif %}
                 "inLanguage": "{{ lang | default(value='en') }}"
             }
@@ -206,7 +206,7 @@
     </script>
 
     {# ===== Breadcrumb JSON-LD ===== #}
-    {% if page.ancestors is defined and page.ancestors | length > 0 %}
+    {% if page?.ancestors is defined and page?.ancestors | length > 0 %}
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -219,7 +219,7 @@
                 "item": "{{ config.base_url | safe }}"
             }
             {% set position = 2 %}
-            {% for ancestor in page.ancestors %}
+            {% for ancestor in page?.ancestors %}
             {% set ancestor_section = get_section(path=ancestor) %}
             ,{
                 "@type": "ListItem",
@@ -231,9 +231,9 @@
             {% endfor %}
             ,{
                 "@type": "ListItem",
-                "position": {{ page.ancestors | length + 2 }},
-                "name": "{{ page.title }}",
-                "item": "{{ page.permalink | safe }}"
+                "position": {{ page?.ancestors | length + 2 }},
+                "name": "{{ page?.title }}",
+                "item": "{{ page?.permalink | safe }}"
             }
         ]
     }
@@ -243,10 +243,18 @@
     {# ===== Stylesheets ===== #}
     <link rel="stylesheet" href="{{ get_url(path='style.css') | safe }}">
 
-    {# Syntax highlighting #}
-    {% if config.markdown.highlight_code is defined and config.markdown.highlight_code %}
-    <link rel="stylesheet" href="{{ get_url(path='syntax-light.css') | safe }}" media="(prefers-color-scheme: light)">
-    <link rel="stylesheet" href="{{ get_url(path='syntax-dark.css') | safe }}" media="(prefers-color-scheme: dark)">
+    {# Syntax highlighting: with `style = "class"`, Zola (0.22+) writes the
+       theme CSS into the output directory as giallo.css (single `theme`) or
+       giallo-light.css / giallo-dark.css (`light_theme` + `dark_theme`).
+       Inline style (the default) needs no stylesheet. #}
+    {% set highlighting = config.markdown.highlighting %}
+    {% if highlighting and highlighting.style == "class" %}
+    {% if highlighting.theme %}
+    <link rel="stylesheet" href="{{ get_url(path='giallo.css') | safe }}">
+    {% else %}
+    <link rel="stylesheet" href="{{ get_url(path='giallo-light.css') | safe }}" media="(prefers-color-scheme: light)">
+    <link rel="stylesheet" href="{{ get_url(path='giallo-dark.css') | safe }}" media="(prefers-color-scheme: dark)">
+    {% endif %}
     {% endif %}
 
     {# ===== Preload fonts ===== #}
@@ -378,7 +386,7 @@
     {% endif %}
 
     {# Page ToC toggle button - docs mode only, fixed position #}
-    {% set has_toc = (page and page.toc) or (section and section.toc) %}
+    {% set has_toc = (page and page?.toc) or (section and section?.toc) %}
     {% if mode == "docs" and has_toc %}
     <button class="page-toc-toggle" type="button" aria-label="Toggle table of contents" aria-expanded="false" aria-controls="page-toc-panel" title="On this page">
         <svg class="page-toc-toggle__icon page-toc-toggle__icon--list" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

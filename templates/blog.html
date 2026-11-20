@@ -25,10 +25,10 @@
                 {% if page.date %}
                 <time datetime="{{ page.date }}">{{ page.date | date(format="%B %d, %Y") }}</time>
                 {% endif %}
-                {% if page.taxonomies.tags %}
+                {% if page.taxonomies?.tags %}
                 <div class="blog-card__tags">
-                    {% for tag in page.taxonomies.tags | slice(end=3) %}
-                    <a href="{{ get_taxonomy_url(kind='tags', name=tag) | safe }}" class="tag">{{ tag }}</a>
+                    {% for tag in page.taxonomies?.tags[:3] %}
+                    <a href="{{ get_taxonomy_url(kind='tags', term=tag) | safe }}" class="tag">{{ tag }}</a>
                     {% endfor %}
                 </div>
                 {% endif %}

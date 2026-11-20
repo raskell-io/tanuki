@@ -1,41 +1,38 @@
 {# =============================================================================
-   Macros: UI Components
+   Components: UI Components
    Reusable UI components (tags, buttons, icons, etc.)
    ============================================================================= #}
 
 {# -----------------------------------------------------------------------------
    Tag - Single tag pill
-   Usage: {{ macros::tag(name="rust", url="/tags/rust/") }}
+   Usage: {{<ui.tag name="rust" url="/tags/rust/" />}}
    ----------------------------------------------------------------------------- #}
-{% macro tag(name, url="", size="md") %}
+{% component ui.tag(name, url="", size="md") %}
 {% if url %}
 <a href="{{ url | safe }}" class="tag tag--{{ size }}">{{ name }}</a>
 {% else %}
 <span class="tag tag--{{ size }}">{{ name }}</span>
 {% endif %}
-{% endmacro %}
+{% endcomponent ui.tag %}
 
 {# -----------------------------------------------------------------------------
    Tag List - List of tags
-   Usage: {{ macros::tag_list(tags=page.taxonomies.tags, limit=5) }}
+   Usage: {{<ui.tag_list tags={page.taxonomies?.tags} limit={5} />}}
    ----------------------------------------------------------------------------- #}
-{% macro tag_list(tags, limit=0, size="md") %}
+{% component ui.tag_list(tags, limit=0, size="md") %}
 <div class="tag-list">
-    {% set display_tags = tags %}
-    {% if limit > 0 %}
-    {% set display_tags = tags | slice(end=limit) %}
-    {% endif %}
+    {% set display_tags = tags[:limit] if limit > 0 else tags %}
     {% for tag in display_tags %}
-    <a href="{{ get_taxonomy_url(kind='tags', name=tag) | safe }}" class="tag tag--{{ size }}">{{ tag }}</a>
+    <a href="{{ get_taxonomy_url(kind='tags', term=tag) | safe }}" class="tag tag--{{ size }}">{{ tag }}</a>
     {% endfor %}
 </div>
-{% endmacro %}
+{% endcomponent ui.tag_list %}
 
 {# -----------------------------------------------------------------------------
    Button - Standard button
-   Usage: {{ macros::button(text="Learn more", url="/about/", variant="primary") }}
+   Usage: {{<ui.button text="Learn more" url="/about/" variant="primary" />}}
    ----------------------------------------------------------------------------- #}
-{% macro button(text, url="", variant="primary", size="md", icon="") %}
+{% component ui.button(text, url="", variant="primary", size="md", icon="") %}
 {% if url %}
 <a href="{{ url | safe }}" class="btn btn--{{ variant }} btn--{{ size }}">
     {% if icon %}<span class="btn__icon">{{ icon | safe }}</span>{% endif %}
@@ -47,34 +44,34 @@
     {{ text }}
 </button>
 {% endif %}
-{% endmacro %}
+{% endcomponent ui.button %}
 
 {# -----------------------------------------------------------------------------
    Pill Button - Rounded CTA button
-   Usage: {{ macros::pill_button(text="View all", url="/blog/") }}
+   Usage: {{<ui.pill_button text="View all" url="/blog/" />}}
    ----------------------------------------------------------------------------- #}
-{% macro pill_button(text, url) %}
+{% component ui.pill_button(text, url) %}
 <a href="{{ url | safe }}" class="view-all-link">{{ text }}</a>
-{% endmacro %}
+{% endcomponent ui.pill_button %}
 
 {# -----------------------------------------------------------------------------
    Section Header - Title with optional link
-   Usage: {{ macros::section_header(title="Recent Posts", link_text="View all", link_url="/blog/") }}
+   Usage: {{<ui.section_header title="Recent Posts" link_text="View all" link_url="/blog/" />}}
    ----------------------------------------------------------------------------- #}
-{% macro section_header(title, link_text="", link_url="") %}
+{% component ui.section_header(title, link_text="", link_url="") %}
 <div class="section__header">
     <h2 class="section__title">{{ title }}</h2>
     {% if link_text and link_url %}
     <a href="{{ link_url | safe }}" class="section__link">{{ link_text }}</a>
     {% endif %}
 </div>
-{% endmacro %}
+{% endcomponent ui.section_header %}
 
 {# -----------------------------------------------------------------------------
    Pagination - Previous/Next navigation
-   Usage: {{ macros::pagination(paginator=paginator) }}
+   Usage: {{<ui.pagination paginator={paginator} />}}
    ----------------------------------------------------------------------------- #}
-{% macro pagination(paginator) %}
+{% component ui.pagination(paginator) %}
 {% if paginator %}
 <nav class="pagination" aria-label="Pagination">
     {% if paginator.previous %}
@@ -100,13 +97,13 @@
     {% endif %}
 </nav>
 {% endif %}
-{% endmacro %}
+{% endcomponent ui.pagination %}
 
 {# -----------------------------------------------------------------------------
    Social Links - Social media icon links
-   Usage: {{ macros::social_links(social=config.extra.social) }}
+   Usage: {{<ui.social_links social={config.extra.social} />}}
    ----------------------------------------------------------------------------- #}
-{% macro social_links(social, size=22) %}
+{% component ui.social_links(social, size=22) %}
 <div class="social-links">
     {% if social.github %}
     <a href="{{ social.github }}" target="_blank" rel="noopener" aria-label="GitHub">
@@ -148,12 +145,12 @@
     </a>
     {% endif %}
 </div>
-{% endmacro %}
+{% endcomponent ui.social_links %}
 
 {# -----------------------------------------------------------------------------
    Avatar - User/author avatar image
-   Usage: {{ macros::avatar(src="/images/avatar.jpg", alt="John Doe", size=80) }}
+   Usage: {{<ui.avatar src="/images/avatar.jpg" alt="John Doe" size={80} />}}
    ----------------------------------------------------------------------------- #}
-{% macro avatar(src, alt="", size=80) %}
+{% component ui.avatar(src, alt="", size=80) %}
 <img src="{{ src | safe }}" alt="{{ alt }}" class="avatar" width="{{ size }}" height="{{ size }}" loading="lazy">
-{% endmacro %}
+{% endcomponent ui.avatar %}
